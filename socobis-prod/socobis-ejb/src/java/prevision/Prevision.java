@@ -12,6 +12,8 @@ import java.sql.Connection;
 
 import caisse.MvtCaisse;
 import caisse.ReportCaisse;
+import change.TauxDeChange;
+
 import com.mongodb.util.Util;
 import faturefournisseur.FactureFournisseur;
 import java.sql.Date;
@@ -158,10 +160,49 @@ public class Prevision extends MvtCaisse{
         if((this.getCredit()==0&&this.getDebit()==0)) throw new Exception("Montant invalide");
     }
     
-       @Override
+    @Override
     public ClassMAPTable createObject(String u, Connection c) throws Exception{
-        
+        System.out.println("Prevision.createObject: Début de la création de l'objet avec conversion en AR si nécessaire");
+        convertirMontantEnAR(c);    
         return createObjectSF(u, c);
+    }
+
+    // Ajoutez cette méthode simple dans la même classe
+    private void convertirMontantEnAR(Connection c) throws Exception {
+        System.out.println("Méthode convertirMontantEnAR appelée");
+        System.out.println("Devise actuelle : " + this.getIdDevise());
+        // Si la devise n'est pas AR, convertir
+        if (this.getIdDevise() != null && !this.getIdDevise().equals("AR")) {
+            
+            // Récupérer le taux de change avec votre méthode existante
+            double taux = TauxDeChange.getLastTaux(
+                c, 
+                utilitaire.Utilitaire.formatterDaty(this.getDaty()), 
+                this.getIdDevise()
+            );
+            
+            // Sauvegarder le taux utilisé (déjà dans le champ taux)
+            this.setTaux(taux);
+            
+            // Convertir les montants
+            if (this.getDebit() > 0) {
+                double montantOriginal = this.getDebit(); // Conserver mentalement
+                this.setDebit(montantOriginal * taux);
+                // Montant original = montantOriginal en devise this.getIdDevise()
+            }
+            
+            if (this.getCredit() > 0) {
+                double montantOriginal = this.getCredit(); // Conserver mentalement
+                this.setCredit(montantOriginal * taux);
+                // Montant original = montantOriginal en devise this.getIdDevise()
+            }
+            
+            // IMPORTANT : On ne change pas idDevise, on garde la devise d'origine
+            // Les montants sont maintenant en AR mais idDevise montre la devise d'origine
+        } else {
+            // Si c'est déjà en AR, taux = 1
+            this.setTaux(1.0);
+        }
     }
 
     @Override
