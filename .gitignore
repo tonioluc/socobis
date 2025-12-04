@@ -57,3 +57,4 @@ verify-import.sql
 socobis-war/web/dateBuild.txt
 reset-dtb.bat
 deploy.bat
+*.zip
