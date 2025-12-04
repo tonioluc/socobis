@@ -81,3 +81,5 @@ Si vous arrivez sur la page avec le message « Bienvenue sur votre espace de ges
   → C’est normal : il s’agit du service OCR/chatbot qui n’est pas démarré. Vous pouvez les ignorer totalement.
 
 Socobis est maintenant opérationnel ! Enjoy ;)
+
+07/12/2025:30;10/12/2025:60;15/12/2025:10

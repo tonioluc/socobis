@@ -78,6 +78,7 @@
         pi.getFormu().getChamp("fraislivraison").setLibelle("Frais de livraison (Par Kg)");
         pi.getFormu().getChamp("estPrevu").setLibelle("Est Pr&eacutevu");
         pi.getFormu().getChamp("datyPrevu").setLibelle("Date pr&eacute;visionnelle d'encaissement");
+        pi.getFormu().getChamp("planpaiement").setLibelle("Plan paiement");
         //pi.getFormu().getChamp("designation").setDefaut("Vente particulier du "+utilitaire.Utilitaire.dateDuJour());
         pi.getFormu().getChamp("remarque").setLibelle("Remarque");
         pi.getFormu().getChamp("daty").setLibelle("Date");
