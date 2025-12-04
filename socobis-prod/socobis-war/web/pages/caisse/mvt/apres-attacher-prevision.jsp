@@ -13,9 +13,12 @@
         String lien = (String) request.getParameter("lien");
         String id = (String) request.getParameter("idPrevision");
         PrevisionComplet prevision = new PrevisionComplet();
-        System.out.println(id);
+        System.out.println("idPrevision ================ "+id);
         prevision.setId(id);
-        String[] ids = request.getParameterValues("id");
+        String[] ids = request.getParameterValues("ids");
+        for(String id2 : ids){
+            System.out.println("IDS ::::: "+id2);
+        }
         prevision.attacherFacture(ids, u.getUser().getTuppleID(), null);
 %>
 <script language="JavaScript"> document.location.replace("<%=lien%>?but=prevision/prevision-fiche.jsp&valeur=&id=<%=id%>");</script>
