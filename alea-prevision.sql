@@ -1,6 +1,8 @@
 ALTER TABLE VENTE
 ADD planpaiement varchar(200);
 
+commit;
+
 CREATE OR REPLACE VIEW INSERTION_VENTE AS
 SELECT
 	v.ID,
