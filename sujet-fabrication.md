@@ -237,11 +237,3 @@ Quand les contrôleurs arrivent, ils disent :
 * Gérer automatiquement le stock
 * Savoir exactement **ce qui a été consommé**
 * Être prêt pour les contrôles
-
----
-
-Si tu veux, au prochain message, je peux :
-
-* 📊 Te proposer **le modèle de base de données**
-* 🧠 Te faire **un diagramme logique**
-* 💻 Ou t’expliquer **comment coder ça (Java / Spring / Django / SQL)**
