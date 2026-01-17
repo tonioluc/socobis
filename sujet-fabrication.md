@@ -1,8 +1,3 @@
-D’accord 👍
-Je vais **clarifier le sujet en français**, de façon **structurée**, avec **des exemples concrets**, en reliant bien **le métier (production)** et **l’interface informatique** que tu veux concevoir.
-
----
-
 ## 1. Idée générale (vision métier)
 
 On parle d’un **système de gestion de production (manufacturing)**, où :
