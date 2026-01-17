@@ -1,0 +1,20 @@
+Andrasana socobis prod :
+-> INTERFACE VAOVAO MIALA AMLEH APJ 
+-Inona avy ny ao anatinleh interface?
+->Misy liste ana produit fini ao anatiny.
+->Produit fini 1 : fitambarana matière première (misy formule mihitsy ilay izy)
+->Misy produit intermediaire : mbola fitambarana matière première (ex : mila atao anaty stock ilay produit intermediaire rehefa hanamboatra anleh produit fini , mila fabriquena leizy raha oatra mbola tsy misy)
+->Misy anleh charge hoe gasoil
+
+Scénario :
+Ity misy produit -> firy ny commandiko -> iza avy ny matériel ilaina rehefa anamboatra anleh produit zah -> une fois vita iny fabrication iny de misy entré de stock de izay.
+
+INTERFACE FINALE:
+-Manana liste des produits
+-Fabriquer produits -> firy le quantité de produit ilaiko -> fabriqueo leizy
+-Hita amzay hoe inona avy ny matières première lany tamniny , inona avy ny matière intermédiaire lany tamniny.
+
+Rehefa ho avy ny fitsarana :
+-Miteny zareo hoe izao ilay produit ho amboarina fa tsy produit efa ao no alaina.
+-De ao anatinleh fabrication de produit koa misy hoe firy ny carton ilaina , firy ny sachet ilaina.
+
