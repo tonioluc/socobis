@@ -218,6 +218,37 @@ export const history: ManufactureHistoryItem[] = [
   },
 ]
 
+/**
+ * Perform a mock manufacture: update finished product stock and append a history entry.
+ * Returns the created history item.
+ */
+export function performMockManufacture(productId: string, qty: number) {
+  const prod = products.find((p) => p.id === productId)
+  if (!prod) throw new Error('Product not found: ' + productId)
+
+  // Increase stock for finished product
+  prod.stock = round2(prod.stock + qty)
+
+  const now = new Date()
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+    now.getDate()
+  ).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+
+  const item: ManufactureHistoryItem = {
+    id: `FAB-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(
+      Math.floor(Math.random() * 900) + 100
+    )}`,
+    date: dateStr,
+    productName: prod.name,
+    qtyProduced: qty,
+    unit: prod.unit,
+    status: 'TERMINEE',
+  }
+
+  history.unshift(item)
+  return item
+}
+
 export function formatProductType(t: ProductType): string {
   switch (t) {
     case 'MATIERE_PREMIERE':

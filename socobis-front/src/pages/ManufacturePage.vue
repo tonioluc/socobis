@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { formulasByProductId, products, round2 } from '@/mock/fabrication'
+import { formulasByProductId, products, round2, performMockManufacture } from '@/mock/fabrication'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,6 +46,12 @@ const needs = computed(() => {
 
 const missingIntermediates = computed(() => needs.value.filter((n) => n.type === 'INTERMEDIAIRE' && n.missing > 0))
 
+// local tick to force recompute when module data mutated
+const tick = ref(0)
+
+// last stock entry created by mock manufacture
+const lastEntry = ref(null as any)
+
 function pillClass(ok: boolean) {
   return ok
     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
@@ -54,6 +60,20 @@ function pillClass(ok: boolean) {
 
 function applyProduct() {
   router.replace({ path: '/fabrication', query: { productId: selectedProductId.value } })
+}
+
+function onMockManufacture() {
+  const qty = Number.isFinite(qtyToProduce.value) ? Math.max(0, qtyToProduce.value) : 0
+  if (!selectedProductId.value || qty <= 0) return
+
+  try {
+    const created = performMockManufacture(selectedProductId.value, qty)
+    lastEntry.value = created
+    tick.value++
+  } catch (e) {
+    // ignore in mock
+    console.error(e)
+  }
 }
 </script>
 
@@ -210,6 +230,7 @@ function applyProduct() {
         <button
           class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
           :disabled="needs.some((n) => !n.enough && n.type !== 'CHARGE')"
+          @click="onMockManufacture"
         >
           <i class="fas fa-play"></i>
           Fabriquer (mock)
@@ -221,6 +242,20 @@ function applyProduct() {
           <i class="fas fa-arrow-left"></i>
           Retour produits
         </button>
+      </div>
+      <div v-if="lastEntry" class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="rounded-full bg-emerald-700 p-2 text-white">
+              <i class="fas fa-plus"></i>
+            </div>
+            <div>
+              <div class="font-medium text-emerald-900">Entrée en stock enregistrée</div>
+              <div class="text-emerald-800/80">{{ lastEntry.productName }} : +{{ lastEntry.qtyProduced }} {{ lastEntry.unit }}</div>
+            </div>
+          </div>
+          <div class="text-emerald-900">Réf: {{ lastEntry.id }}</div>
+        </div>
       </div>
     </section>
   </div>
