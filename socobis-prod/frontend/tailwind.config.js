@@ -10,6 +10,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Socobis Palette
+        'socobis-bg': '#F8FAFC',
+        'socobis-nav': '#1E293B',
+        'socobis-action': '#3B82F6',
+        'socobis-secondary': '#64748B',
+        
+        // Brand colors (blue + mint)
+        brand: '#3B82F6', // Updated to Action Primaire for compatibility
+        mint: '#0FFCBE',
         primary: {
           50: '#f9fafb',
           100: '#f3f4f6',

@@ -27,12 +27,11 @@ import SideBar from './components/layout/SideBar.vue'
 }
 
 .app-container {
-  @apply flex min-h-screen bg-gray-50;
+  @apply flex min-h-screen bg-socobis-bg;
 }
 
 .main-content {
-  @apply flex-1 ml-72 min-h-screen;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  @apply flex-1 ml-72 min-h-screen bg-socobis-bg;
 }
 
 .content-wrapper {

@@ -3,9 +3,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Palette variables */
+:root {
+  --brand: #3B82F6; /* Action Primaire */
+  --nav-bg: #1E293B; /* Navigation/Menu */
+  --main-bg: #F8FAFC; /* Fond Principal */
+  --text-secondary: #64748B; /* Texte Secondaire */
+  --mint: #0FFCBE;
+  --brand-dark: #2563EB; /* Darker shade of Action Primaire */
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-socobis-bg text-gray-900 antialiased;
   }
   
   * {
@@ -13,13 +23,44 @@
   }
 }
 
+/* Palette overrides to enforce requested theme */
+@layer utilities {
+  /* Secondary text everywhere */
+  .text-gray-400 { color: var(--text-secondary) !important; }
+  .text-gray-300 { color: var(--text-secondary) !important; }
+  .text-gray-500 { color: var(--text-secondary) !important; }
+
+  /* Base light background */
+  .bg-gray-50 { background-color: var(--main-bg) !important; }
+
+  /* Navigation dark background mapping */
+  .bg-gray-900 { background-color: var(--nav-bg) !important; }
+
+  /* Primary action helpers */
+  .text-primary { color: var(--brand) !important; }
+  .bg-primary { background-color: var(--brand) !important; }
+  .border-primary { border-color: var(--brand) !important; }
+}
+
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+    @apply px-6 py-3 rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+    background: var(--brand);
+    color: white;
+  }
+
+.btn-primary:hover {
+  background: var(--brand-dark);
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-gray-900 border-2 border-gray-900 rounded-xl hover:bg-gray-900 hover:text-white transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95;
+    @apply px-6 py-3 bg-white text-gray-900 rounded-xl hover:text-white transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95;
+    border: 2px solid var(--brand);
+  }
+
+.btn-secondary:hover {
+  background: var(--brand);
+  color: white;
   }
   
   .btn-outline {
@@ -31,7 +72,9 @@
   }
   
   .card-dark {
-    @apply bg-gray-900 text-white rounded-2xl shadow-lg border border-gray-800 p-8 hover:shadow-2xl transition-all duration-300;
+    @apply text-white rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300;
+    background: linear-gradient(135deg, var(--brand) 0%, var(--mint) 100%);
+    border: none;
   }
   
   .input {
@@ -47,7 +90,8 @@
   }
   
   .badge-primary {
-    @apply bg-gray-900 text-white;
+    background: var(--brand);
+    color: white;
   }
   
   .badge-secondary {

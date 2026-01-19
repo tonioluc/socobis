@@ -136,7 +136,7 @@
                     v-model="detail.qte"
                     type="number"
                     min="1"
-                    step="0.01"
+                    step="1"
                     class="table-input table-input-xs"
                   />
                 </td>

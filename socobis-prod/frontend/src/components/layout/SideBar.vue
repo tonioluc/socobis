@@ -5,11 +5,11 @@
     <div class="sidebar-header">
       <div class="flex items-center space-x-4">
         <div class="logo-container">
-          <Flag class="w-7 h-7 text-white" />
+            <i class="fas fa-flag text-white text-2xl"></i>
         </div>
         <div class="flex-1">
           <h1 class="text-2xl font-bold text-white tracking-tight">Fabrication Management</h1>
-          <p class="text-sm text-gray-400 font-medium">Gestion de Fabrication</p>
+          <p class="text-sm text-socobis-secondary font-medium">Gestion de Fabrication</p>
         </div>
       </div>
     </div>
@@ -28,9 +28,9 @@
         <!-- Ordre de fabrication -->
         <div class="submenu-section">
           <div class="submenu-header" @click="toggleSubmenu('orders')">
-            <ClipboardList class="w-4 h-4 text-gray-400" />
+            <i class="fas fa-clipboard text-socobis-secondary text-sm"></i>
             <span class="submenu-title">Ordre de fabrication</span>
-            <ChevronDown class="w-4 h-4 text-gray-400 transition-transform" :class="{ 'rotate-180': expandedMenus.orders }" />
+            <i class="fas fa-chevron-down text-socobis-secondary transition-transform" :class="{ 'rotate-180': expandedMenus.orders }"></i>
           </div>
           <div class="submenu-items" :class="{ 'expanded': expandedMenus.orders }">
             <router-link
@@ -53,9 +53,9 @@
         <!-- Fabrication -->
         <div class="submenu-section">
           <div class="submenu-header" @click="toggleSubmenu('fabrication')">
-            <Package class="w-4 h-4 text-gray-400" />
+            <i class="fas fa-box text-socobis-secondary text-sm"></i>
             <span class="submenu-title">Fabrication</span>
-            <ChevronDown class="w-4 h-4 text-gray-400 transition-transform" :class="{ 'rotate-180': expandedMenus.fabrication }" />
+            <i class="fas fa-chevron-down text-socobis-secondary transition-transform" :class="{ 'rotate-180': expandedMenus.fabrication }"></i>
           </div>
           <div class="submenu-items" :class="{ 'expanded': expandedMenus.fabrication }">
             <router-link
@@ -101,15 +101,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import {
-  Flag,
-  Home,
-  Package,
-  LogOut,
-  ChevronDown,
-  ClipboardList,
-  User
-} from 'lucide-vue-next'
+// Using Font Awesome 5 via CDN (included in index.html)
 
 const route = useRoute()
 
@@ -136,8 +128,7 @@ const logout = () => {
 <style scoped>
 /* Sidebar principale */
 .sidebar {
-  @apply fixed left-0 top-0 h-screen w-72 bg-gray-900 shadow-2xl flex flex-col z-50;
-  background: linear-gradient(180deg, #111827 0%, #000000 100%);
+  @apply fixed left-0 top-0 h-screen w-72 bg-socobis-nav shadow-2xl flex flex-col z-50;
 }
 
 /* Header */
@@ -147,7 +138,7 @@ const logout = () => {
 
 .logo-container {
   @apply w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl;
-  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+  background: linear-gradient(135deg, #ffffff 0%, var(--brand) 60%);
 }
 
 /* Navigation */
@@ -160,15 +151,15 @@ const logout = () => {
 }
 
 .sidebar-nav::-webkit-scrollbar-track {
-  @apply bg-gray-900;
+  @apply bg-socobis-nav;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 rounded-full;
+  @apply bg-slate-600 rounded-full;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-600;
+  @apply bg-slate-500;
 }
 
 /* Section de navigation */
@@ -177,7 +168,7 @@ const logout = () => {
 }
 
 .nav-section-title {
-  @apply text-xs font-bold text-gray-400 uppercase tracking-wider px-4 mb-4;
+  @apply text-xs font-bold text-socobis-secondary uppercase tracking-wider px-4 mb-4;
 }
 
 /* Groupe de navigation (parent + enfants) */
@@ -188,7 +179,7 @@ const logout = () => {
 /* Items de navigation */
 .nav-item {
   @apply flex items-center space-x-3 px-4 py-3.5 rounded-xl;
-  @apply text-gray-400 hover:text-white cursor-pointer relative;
+  @apply text-socobis-secondary hover:text-white cursor-pointer relative;
   @apply overflow-hidden transition-all;
 }
 
@@ -204,11 +195,11 @@ const logout = () => {
 
 .nav-item-icon {
   @apply relative z-10 flex items-center justify-center;
-  @apply w-10 h-10 rounded-lg bg-gray-800 transition-all;
+  @apply w-10 h-10 rounded-lg bg-slate-700 transition-all;
 }
 
 .nav-item:hover .nav-item-icon {
-  @apply bg-gray-700;
+  @apply bg-slate-600;
 }
 
 .nav-item.active .nav-item-icon {
@@ -220,7 +211,7 @@ const logout = () => {
 }
 
 .nav-item.active {
-  @apply text-white bg-gray-800;
+  @apply text-white bg-slate-700;
 }
 
 .nav-item.active::after {
@@ -229,7 +220,7 @@ const logout = () => {
 }
 
 .nav-item-indicator {
-  @apply ml-auto w-2 h-2 rounded-full bg-gray-700 transition-all;
+  @apply ml-auto w-2 h-2 rounded-full bg-slate-500 transition-all;
   opacity: 0;
 }
 
@@ -248,7 +239,7 @@ const logout = () => {
 }
 
 .submenu-header {
-  @apply flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg cursor-pointer transition-all duration-200;
+  @apply flex items-center gap-3 px-4 py-3 text-socobis-secondary hover:text-white hover:bg-slate-700 rounded-lg cursor-pointer transition-all duration-200;
 }
 
 .submenu-title {
@@ -265,27 +256,28 @@ const logout = () => {
 }
 
 .nav-subitem {
-  @apply flex items-center px-8 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg mx-2 my-1 transition-all duration-200;
+  @apply flex items-center px-8 py-2.5 text-sm text-socobis-secondary hover:text-white hover:bg-slate-700 rounded-lg mx-2 my-1 transition-all duration-200;
   position: relative;
 }
 
 .nav-subitem.active {
-  @apply text-white bg-gray-800;
+  @apply text-white bg-slate-700;
 }
 
 .nav-subitem.active::before {
   content: '';
-  @apply absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r;
+  @apply absolute left-0 top-0 bottom-0 w-1 rounded-r;
+  background: var(--brand);
 }
 
 /* Footer */
 .sidebar-footer {
-  @apply p-4 border-t border-gray-800;
+  @apply p-4 border-t border-slate-700;
 }
 
 .user-card {
   @apply flex items-center space-x-4 p-4 rounded-xl;
-  @apply bg-gray-800 hover:bg-gray-700 cursor-pointer;
+  @apply bg-slate-700 hover:bg-slate-600 cursor-pointer;
   @apply transition-all;
 }
 
@@ -299,7 +291,7 @@ const logout = () => {
 
 .status-indicator {
   @apply absolute -bottom-1 -right-1 w-4 h-4;
-  @apply bg-green-500 border-2 border-gray-900 rounded-full;
+  @apply bg-green-500 border-2 border-socobis-nav rounded-full;
 }
 
 .user-details {
@@ -311,11 +303,11 @@ const logout = () => {
 }
 
 .user-role {
-  @apply text-xs text-gray-400 font-medium;
+  @apply text-xs text-socobis-secondary font-medium;
 }
 
 .logout-btn {
-  @apply p-2.5 rounded-lg bg-gray-900 text-gray-400;
+  @apply p-2.5 rounded-lg bg-socobis-nav text-socobis-secondary;
   @apply hover:bg-red-600 hover:text-white;
   @apply transition-all shadow-md;
 }

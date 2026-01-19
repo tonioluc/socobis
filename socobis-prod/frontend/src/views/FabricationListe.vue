@@ -486,7 +486,7 @@ export default {
   text-align: left;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e5e7eb;
@@ -509,13 +509,13 @@ export default {
 }
 
 .link {
-  color: #2563eb;
+  color: var(--brand);
   text-decoration: underline;
   transition: color 0.2s;
 }
 
 .link:hover {
-  color: #1d4ed8;
+  color: var(--brand-dark);
 }
 
 .pagination {
