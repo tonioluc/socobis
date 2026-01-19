@@ -26,6 +26,10 @@ public class FactureFournisseurDetails extends ClassFille{
     protected int mois, annee;
     protected double tauxDeChange;
     private double montantPerteGain;
+    
+    // Champs temporaires pour validation de la période de devise
+    private transient String dateDebutDevise;
+    private transient String dateFinDevise;
 
 
     public int getMois() {
@@ -82,12 +86,23 @@ public class FactureFournisseurDetails extends ClassFille{
     }
 
     public void setIdDevise(String idDevise)throws Exception {
-        if (this.getMode().equals("modif")) {
-            if (idDevise == null) {
-                this.setIdDevise("AR");
+        // Si le format est "CODE|dateDebut|dateFin", extraire seulement le code
+        if (idDevise != null && idDevise.contains("|")) {
+            String[] parts = idDevise.split("\\|");
+            this.idDevise = parts[0]; // Stocker seulement le code
+            // Stocker les dates pour validation ultérieure
+            if (parts.length >= 3) {
+                this.dateDebutDevise = parts[1];
+                this.dateFinDevise = parts[2];
             }
+        } else {
+            if (this.getMode().equals("modif")) {
+                if (idDevise == null) {
+                    idDevise = "AR";
+                }
+            }
+            this.idDevise = idDevise;
         }
-        this.idDevise = idDevise;
     }
 
     public double getTaux() {
@@ -331,8 +346,25 @@ public class FactureFournisseurDetails extends ClassFille{
     @Override
     public void controler(Connection c) throws Exception{
         FactureFournisseur mere =(FactureFournisseur)new FactureFournisseur().getById(this.getIdFactureFournisseur(),"FACTUREFOURNISSEUR",c);
-        this.setMois(Utilitaire.getMois(mere.getDaty()));
-        this.setAnnee(Utilitaire.getAnnee(mere.getDaty()));
+        // Si la mère existe déjà en base, récupérer mois et année
+        if(mere != null && mere.getDaty() != null) {
+            this.setMois(Utilitaire.getMois(mere.getDaty()));
+            this.setAnnee(Utilitaire.getAnnee(mere.getDaty()));
+        }
+        
+        // Valider que la date prévisionnelle de paiement est dans la fourchette de la devise
+        if (this.dateDebutDevise != null && this.dateFinDevise != null && mere != null && mere.getDatyPrevu() != null) {
+            java.text.SimpleDateFormat sdfISO = new java.text.SimpleDateFormat("yyyy-MM-dd");
+            java.text.SimpleDateFormat sdfFR = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            java.util.Date dateDebut = sdfISO.parse(this.dateDebutDevise);
+            java.util.Date dateFin = sdfISO.parse(this.dateFinDevise);
+            java.util.Date datyPrevu = new java.util.Date(mere.getDatyPrevu().getTime());
+            
+            if (datyPrevu.before(dateDebut) || datyPrevu.after(dateFin)) {
+                throw new Exception("La date prévisionnelle de paiement (" + sdfFR.format(datyPrevu) + ") n'est pas dans la période de validité de la devise " + this.getIdDevise() + " (" + this.dateDebutDevise + " au " + this.dateFinDevise + ")");
+            }
+        }
+        
         super.controler(c);
     }
 }

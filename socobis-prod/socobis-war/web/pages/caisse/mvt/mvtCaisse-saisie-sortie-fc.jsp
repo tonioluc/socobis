@@ -3,12 +3,15 @@
 <%@page import="caisse.MvtCaisse"%>
 <%@page import="caisse.Caisse"%>
 <%@page import="user.*"%>
+<%@page import="java.io.*"%>
+<%@page import="org.json.*"%>
 
 <%
 
 
     try{
-
+        System.out.println("=== mvtCaisse-saisie-sortie-fc.jsp DEBUT ===");
+        
         String lien = (String) session.getValue("lien");
 
         UserEJB user = (UserEJB) session.getValue("u");
@@ -20,12 +23,46 @@
         String devise=request.getParameter("devise");
         String tiers=request.getParameter("tiers");
         String prev=request.getParameter("idPrevision");
+        
+        // Récupérer le taux depuis le JSON basé sur la devise
+        String tauxStr = "1";
+        System.out.println("=== mvtCaisse-saisie-sortie-fc.jsp devise=" + devise + " ===");
+        if(devise != null && !devise.isEmpty()) {
+            try {
+                String jsonPath = application.getRealPath("/assets/data/devises.json");
+                System.out.println("=== mvtCaisse-saisie-sortie-fc.jsp jsonPath=" + jsonPath + " ===");
+                
+                // Lire le fichier JSON directement
+                StringBuilder content = new StringBuilder();
+                BufferedReader reader = new BufferedReader(new FileReader(jsonPath));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line);
+                }
+                reader.close();
+                
+                JSONArray devises = new JSONArray(content.toString());
+                for (int i = 0; i < devises.length(); i++) {
+                    JSONObject dev = devises.getJSONObject(i);
+                    if (dev.getString("code").equals(devise)) {
+                        tauxStr = String.valueOf(dev.getDouble("taux"));
+                        break;
+                    }
+                }
+                System.out.println("=== mvtCaisse-saisie-sortie-fc.jsp tauxStr=" + tauxStr + " ===");
+            } catch(Exception ex) {
+                System.out.println("=== mvtCaisse-saisie-sortie-fc.jsp ERREUR: " + ex.getMessage() + " ===");
+                ex.printStackTrace();
+            }
+        }
 
-        affichage.Champ[] liste = new affichage.Champ[1];
+        affichage.Champ[] liste = new affichage.Champ[2];
+        // affichage.Champ[] liste = new affichage.Champ[1];
 //				liste[0] = new Liste("idDevise",new caisse.Devise(),"val","id");
 				Caisse c = new Caisse();
 				//c.setIdPoint(ConstanteStation.getFichierCentre());
 				liste[0] = new Liste("idCaisse",c,"val","id");
+        liste[1] = new Liste("idDevise", new TypeObjet("DEVISE"), "val" ,"id");
 			
         pageInsert.getFormu().changerEnChamp(liste);
 				pageInsert.getFormu().getChamp("designation").setDefaut("Paiement de la facture : "+idOrigine);
@@ -36,8 +73,9 @@
         pageInsert.getFormu().getChamp("daty").setLibelle("Date");
         pageInsert.getFormu().getChamp("idtiers").setLibelle("Fournisseur");
         pageInsert.getFormu().getChamp("idDevise").setDefaut(devise);
-        pageInsert.getFormu().getChamp("idDevise").setAutre("readonly");
+        // pageInsert.getFormu().getChamp("idDevise").setAutre("readonly");
         pageInsert.getFormu().getChamp("taux").setDefaut("1");
+        pageInsert.getFormu().getChamp("taux").setAutre("readonly");
         pageInsert.getFormu().getChamp("idVirement").setVisible(false);
         pageInsert.getFormu().getChamp("idVenteDetail").setVisible(false);
         pageInsert.getFormu().getChamp("idOp").setVisible(false);
@@ -81,8 +119,9 @@
 <%
 
     }catch(Exception e){
-    
+        out.println("<div class='alert alert-danger'>Erreur: " + e.getMessage() + "</div>");
         e.printStackTrace();
     }
 
 %>
+<jsp:include page='../../taux.jsp'/>

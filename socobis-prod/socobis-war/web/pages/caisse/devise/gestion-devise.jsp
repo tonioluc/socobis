@@ -49,6 +49,8 @@
 
 %>
 <div class="content-wrapper">
+
+    <section class="content-header">
     <h1> <%=titre%></h1>
     <form action="<%=pi.getLien()%>?but=apresTarif.jsp" method="post" name="<%=nomtable%>" id="<%=nomtable%>">
         <%
@@ -59,8 +61,6 @@
         <input name="classe" type="hidden" id="classe" value="<%=mapping%>">
         <input name="nomtable" type="hidden" id="nomtable" value="<%=nomtable%>">
     </form>
-
-    <section class="content-header">
         <h1><%= pr.getTitre() %></h1>
     </section>
     <section class="content">

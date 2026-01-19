@@ -1,16 +1,14 @@
 package vente;
 
-import bean.*;
 import chatbot.FilleOcr;
 import produits.Ingredients;
 
 import java.sql.Connection;
-import fabrication.Of;
-import fabrication.OfFille;
-import fabrication.Fabrication;
+
+import bean.CGenUtil;
+import bean.ClassFille;
 import fabrication.FabricationFille;
-import vente.Carton;
-import vente.CartonFille;
+import fabrication.OfFille;
 
 public class BonDeCommandeFille extends ClassFille {
     private String id, produit, idbc, unite;

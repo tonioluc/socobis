@@ -91,37 +91,27 @@ public class TauxDeChange extends ClassMAPTable {
 
     public static double getLastTaux(Connection c, String daty, String iddevise) throws Exception {
         boolean estOuvert = false;
-        Connection conn = c; // Utiliser une variable locale
-
+        if (c == null) {
+            c = new UtilDB().GetConn();
+            estOuvert = true;
+        }
         try {
-            if (conn == null) {
-                conn = new UtilDB().GetConn();
-                estOuvert = true;
-            }
-
+            
             if (daty == null || daty.isEmpty())
                 daty = Utilitaire.dateDuJour();
             String req = "select *\n" +
                     "from TAUXDECHANGE t1\n" +
-                    "where t1.DATY = (select max(t2.daty) from TAUXDECHANGE t2 where t2.IDDEVISE = t1.IDDEVISE and t2.daty <= '"
-                    + daty + "')\n" +
+                    "where t1.DATY = (select max(t2.daty) from TAUXDECHANGE t2 where t2.IDDEVISE = t1.IDDEVISE and t2.daty <= TO_DATE('"
+                    + daty + "','dd/mm/yyyy'))\n" +
                     "  and t1.IDDEVISE = '" + iddevise + "' ";
-
-            TauxDeChange[] taux = (TauxDeChange[]) CGenUtil.rechercher(new TauxDeChange(), req, conn);
+            TauxDeChange[] taux = (TauxDeChange[]) CGenUtil.rechercher(new TauxDeChange(), req, c);
             return taux.length > 0 ? taux[0].getTaux() : 1;
-
         } catch (Exception e) {
             e.printStackTrace();
+            c.close();
             throw e;
         } finally {
-            // NE PAS FERMER SI LA CONNEXION ÉTAIT PASSÉE EN PARAMÈTRE
-            if (estOuvert && conn != null) {
-                try {
-                    conn.close();
-                } catch (Exception e) {
-                    // Ignorer les erreurs de fermeture
-                }
-            }
+            c.close();
         }
     }
 

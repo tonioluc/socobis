@@ -10,6 +10,7 @@ import bean.CGenUtil;
 import bean.ClassEtat;
 import bean.ClassMAPTable;
 import bean.UnionIntraTable;
+import change.TauxDeChange;
 import client.Client;
 import constante.ConstanteEtat;
 
@@ -24,6 +25,8 @@ import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
+
 import mg.cnaps.compta.ComptaEcriture;
 import mg.cnaps.compta.ComptaSousEcriture;
 import paiement.LiaisonPaiement;
@@ -32,6 +35,7 @@ import pertegain.Tiers;
 import prevision.MvtCaissePrevision;
 import prevision.Prevision;
 import prevision.PrevisionComplet;
+import utilitaire.ConstanteEtatPaie;
 import utilitaire.UtilDB;
 import utilitaire.Utilitaire;
 import utils.ConstanteAsync;
@@ -43,10 +47,10 @@ import vente.VenteLib;
  *
  * @author nouta
  */
-public class MvtCaisse extends ClassEtat{
-    private String id,designation,idCaisse,idVenteDetail,idVirement,idOp,idOrigine, idtraite,idTiers;
+public class MvtCaisse extends ClassEtat {
+    private String id, designation, idCaisse, idVenteDetail, idVirement, idOp, idOrigine, idtraite, idTiers;
     protected String idDevise;
-    private double debit,credit,taux;
+    private double debit, credit, taux;
     private Date daty;
     private String idPrevision;
     private String compte;
@@ -55,17 +59,22 @@ public class MvtCaisse extends ClassEtat{
     private Traite traite;
     private String idmvtcaissemere;
     private String reference;
+
     @Override
     public boolean isSynchro(){
+        ConstanteEtatPaie.getEtatValiderParDG();
         return true;
     }
+
     public MvtCaisse() {
         super.setNomTable("MOUVEMENTCAISSE");
     }
+
     public void construirePK(Connection c) throws Exception {
         this.preparePk("MTC", "GETSEQMOUVEMENTCAISSE");
         this.setId(makePK(c));
     }
+
     public String getId() {
         return id;
     }
@@ -109,17 +118,19 @@ public class MvtCaisse extends ClassEtat{
     public String getIdmvtcaissemere() {
         return idmvtcaissemere;
     }
+
     public void setIdmvtcaissemere(String idmvtcaissemere) {
         this.idmvtcaissemere = idmvtcaissemere;
     }
 
-    
     public String getReference() {
         return reference;
     }
+
     public void setReference(String reference) {
         this.reference = reference;
     }
+
     public String getIdOrigine() {
         return idOrigine;
     }
@@ -165,7 +176,8 @@ public class MvtCaisse extends ClassEtat{
     }
 
     public void setDebit(double debit) throws Exception {
-        if(debit < 0) throw new Exception("Le montant doit \u00EAtre positif");
+        if (debit < 0)
+            throw new Exception("Le montant doit \u00EAtre positif");
         this.debit = debit;
     }
 
@@ -174,7 +186,8 @@ public class MvtCaisse extends ClassEtat{
     }
 
     public void setCredit(double credit) throws Exception {
-        if(credit < 0) throw new Exception("Le montant doit \u00EAtre positif");
+        if (credit < 0)
+            throw new Exception("Le montant doit \u00EAtre positif");
         this.credit = credit;
     }
 
@@ -190,10 +203,9 @@ public class MvtCaisse extends ClassEtat{
         this.idModePaiement = idModePaiement;
     }
 
-    public void setDaty(Date daty) throws Exception{
-        if(this.getMode().compareTo("modif")==0)
-        {
-            if(daty==null)
+    public void setDaty(Date daty) throws Exception {
+        if (this.getMode().compareTo("modif") == 0) {
+            if (daty == null)
                 throw new Exception("Date invalide");
         }
         this.daty = daty;
@@ -205,7 +217,7 @@ public class MvtCaisse extends ClassEtat{
 
     public void setIdPrevision(String idPrevision) {
         this.idPrevision = idPrevision;
-    }    
+    }
 
     public String getCompte() {
         return compte;
@@ -226,84 +238,98 @@ public class MvtCaisse extends ClassEtat{
     }
 
     public ReportCaisse getReportCaisse(Connection c) throws Exception {
-        boolean estOuvert=false;
-        try
-        {
+        boolean estOuvert = false;
+        try {
             if (c == null) {
-                c=new UtilDB().GetConn();
-                estOuvert=true;
+                c = new UtilDB().GetConn();
+                estOuvert = true;
             }
-            ReportCaisse[] reports = (ReportCaisse[]) CGenUtil.rechercher(new ReportCaisse(), null, null, c, "and idCaisse='"+this.getIdCaisse()+"'");
-             if (reports.length > 0) {
+            ReportCaisse[] reports = (ReportCaisse[]) CGenUtil.rechercher(new ReportCaisse(), null, null, c,
+                    "and idCaisse='" + this.getIdCaisse() + "'");
+            if (reports.length > 0) {
                 return reports[0];
             }
             return null;
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             throw e;
-        }
-        finally
-        {
-            if(estOuvert==true) c.close();
+        } finally {
+            if (estOuvert == true)
+                c.close();
         }
     }
-    public ClassMAPTable createObjectSF(String u,Connection c)throws Exception
-    {
+
+    public ClassMAPTable createObjectSF(String u, Connection c) throws Exception {
+        System.out.println("Eto ara le creation ny mvt caisse");
+        if (!this.getIdDevise().equalsIgnoreCase("AR")) {
+            this.setTaux(TauxDeChange.getLastTaux(null, Utilitaire.datetostring(this.getDaty()), this.getIdDevise()));
+            this.setDebit(Utilitaire.arrondir(this.getDebit() * this.getTaux(), 2));
+            this.setCredit(Utilitaire.arrondir(this.getCredit() * this.getTaux(), 2));
+        }
         return super.createObject(u, c);
     }
+
+        public double zeroIfNegative(double montant) {
+            if (montant < 0) {
+                return 0;
+            }
+            return montant;
+        }
+
+
+    // DANGER
 
     public MvtCaisse validerSimple(String u, Connection c) throws Exception {
         try {
             c = new UtilDB().GetConn();
             MvtCaisse caisse = (MvtCaisse) new MvtCaisse().getById(getId(), null, c);
             double montant = caisse.getMontantMouvement();
-            if(caisse.getIdOrigine()!=null){
-                String [] origines = caisse.getIdOrigine().split(";;");
-                if(origines.length>0){
+            if (caisse.getIdOrigine() != null) {
+                String[] origines = caisse.getIdOrigine().split(";;");
+                if (origines.length > 0) {
                     for (int i = 0; i < origines.length; i++) {
-                        if(caisse.getIdOrigine().startsWith("VNT")){
-                            VenteLib vt = (VenteLib) new VenteLib().getById(origines[i],"VENTE_CPL",c);
+                        if (caisse.getIdOrigine().startsWith("VNT")) {
+                            VenteLib vt = (VenteLib) new VenteLib().getById(origines[i], "VENTE_CPL", c);
                             LiaisonPaiement paiement = new LiaisonPaiement();
-                            if(montant>vt.getMontantreste()){
+                            if (montant > vt.getMontantreste()) {
                                 paiement.setId1(caisse.getId());
                                 paiement.setId2(origines[i]);
                                 paiement.setMontant(vt.getMontantreste());
-                                paiement.createObject(u,c);
-                                paiement.validerObject(u,c);
+                                paiement.createObject(u, c);
+                                paiement.validerObject(u, c);
                                 montant -= vt.getMontantreste();
-                            } else if(montant<=vt.getMontantreste()){
+                            } else if (montant <= vt.getMontantreste()) {
                                 paiement.setId1(caisse.getId());
                                 paiement.setId2(origines[i]);
                                 paiement.setMontant(montant);
-                                paiement.createObject(u,c);
-                                paiement.validerObject(u,c);
+                                paiement.createObject(u, c);
+                                paiement.validerObject(u, c);
                                 break;
                             }
-                        }else if(caisse.getIdOrigine().startsWith("FCF")){
-                            FactureFournisseurCpl fc = (FactureFournisseurCpl) new FactureFournisseurCpl().getById(origines[i],"FACTUREFOURNISSEURCPL",c);
+                        } else if (caisse.getIdOrigine().startsWith("FCF")) {
+                            FactureFournisseurCpl fc = (FactureFournisseurCpl) new FactureFournisseurCpl()
+                                    .getById(origines[i], "FACTUREFOURNISSEURCPL", c);
                             montant -= fc.getMontantreste();
                             LiaisonPaiement paiement = new LiaisonPaiement();
                             paiement.setId1(caisse.getId());
                             paiement.setId2(origines[i]);
-                            if(montant<=0){
-                                paiement.setMontant(fc.getMontantreste()+montant);
-                                paiement.createObject(u,c);
-                                paiement.validerObject(u,c);
+                            if (montant <= 0) {
+                                paiement.setMontant(fc.getMontantreste() + montant);
+                                paiement.createObject(u, c);
+                                paiement.validerObject(u, c);
                                 break;
-                            }else{
+                            } else {
                                 paiement.setMontant(fc.getMontantreste());
-                                paiement.createObject(u,c);
-                                paiement.validerObject(u,c);
+                                paiement.createObject(u, c);
+                                paiement.validerObject(u, c);
                             }
-                        } else if(caisse.getIdOrigine().startsWith("TR") && caisse.getTraite()!=null){
+                        } else if (caisse.getIdOrigine().startsWith("TR") && caisse.getTraite() != null) {
                             montant = caisse.traite.getMontant();
                             LiaisonPaiement paiement = new LiaisonPaiement();
                             paiement.setId1(caisse.getId());
                             paiement.setId2(origines[i]);
                             paiement.setMontant(montant);
-                            paiement.createObject(u,c);
-                            paiement.validerObject(u,c);
+                            paiement.createObject(u, c);
+                            paiement.validerObject(u, c);
                             break;
                         }
                     }
@@ -311,10 +337,55 @@ public class MvtCaisse extends ClassEtat{
             }
             caisse.setEtat(ConstanteEtat.getEtatProforma());
             caisse.updateToTableWithHisto(u, c);
+
+            String idPrevision = caisse.getIdPrevision();
+
+            // Update du montant de la prevision liee
+
+            System.out.println(idPrevision);
+            if (idPrevision != null) {
+                Prevision prevision = new Prevision();
+                prevision = (Prevision) prevision.getById(idPrevision, prevision.getNomTable(), c);
+                System.out.println(prevision);
+
+                System.out.println(prevision.getDaty() + "  " + caisse.getDaty() + " " + caisse.getDaty().compareTo(prevision.getDaty()));
+
+                if (caisse.getDaty().compareTo(prevision.getDaty()) <= 0) {
+
+                    // vola en ariary avy any amn caisse
+                    double montantCaisseCredit = caisse.getCredit() * caisse.getTaux();
+                    double montantCaisseDebit = caisse.getDebit() * caisse.getTaux();
+
+                    System.out.println(montantCaisseDebit + " : debit," + montantCaisseCredit + " : credit");
+                    
+                    // vola en devise himodifiena anleh prevision
+                    double anasoranaPrevisionCredit = montantCaisseCredit / prevision.getTaux();
+                    double anasoranaPrevisionDebit = montantCaisseDebit / prevision.getTaux();
+
+                    System.out.println(anasoranaPrevisionCredit + " anasorana credit , " + anasoranaPrevisionDebit + " anasorana debit");
+
+                    System.out.println("Ny debit tao taloha : " + prevision.getDebit());
+                    System.out.println("Credit taloha : " + prevision.getCredit());
+                    
+                    double solonaDebit = zeroIfNegative(prevision.getDebit() - anasoranaPrevisionDebit);
+                    double solonaCredit = zeroIfNegative(prevision.getCredit() - anasoranaPrevisionCredit);
+
+                    System.out.println("debit vaovao Ary eh " + solonaDebit);
+
+                    System.out.println("credit vaovao koa eh " + solonaCredit);
+
+                    prevision.setDebit(solonaDebit);
+                    prevision.setCredit(solonaCredit);
+
+                    prevision.updateToTable(c);
+                }
+            }
+
             return caisse;
         } finally {
             if (c != null) {
                 try {
+                    c.rollback();
                     c.close();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -323,16 +394,15 @@ public class MvtCaisse extends ClassEtat{
         }
     }
 
-
     @Override
-    public ClassMAPTable createObject(String u, Connection c) throws Exception{
+    public ClassMAPTable createObject(String u, Connection c) throws Exception {
         if (getIdCaisse() == null || getIdCaisse().trim().isEmpty()) {
             setIdCaisse(ConstanteAsync.CAISSE_DEFAUT);
         }
 
         ReportCaisse report = this.getReportCaisse(c);
-        if( report == null ){
-            report=new ReportCaisse();
+        if (report == null) {
+            report = new ReportCaisse();
             Caisse caisse = new Caisse();
             caisse.setId(this.getIdCaisse());
             LocalDateTime localDateTime = this.getDaty().toLocalDate().atStartOfDay().minusDays(1);
@@ -340,50 +410,103 @@ public class MvtCaisse extends ClassEtat{
             report = new ReportCaisse();
             report.setDaty(datehier);
             report.setIdCaisse(this.getIdCaisse());
-            report.createObject(u,c);
-            report.validerObject(u,c);
+            report.createObject(u, c);
+            report.validerObject(u, c);
         }
         MvtCaisse mvt = (MvtCaisse)super.createObject(u, c);
+
         //(u, c);
         return mvt;
     }
-    
+
     public Prevision getPrevision(Connection c) throws Exception {
         Prevision prevision = new Prevision();
-        Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, "and ID = '"+this.getIdPrevision()+"'");
+        Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c,
+                "and ID = '" + this.getIdPrevision() + "'");
         return previsions[0];
     }
-    public PrevisionComplet getPrevision(String nomtable,Connection c) throws Exception {
+
+    public PrevisionComplet getPrevision(String nomtable, Connection c) throws Exception {
         PrevisionComplet prevision = new PrevisionComplet();
-        if(nomtable!=null&&nomtable.compareToIgnoreCase("")!=0) prevision.setNomTable(nomtable);
+        if (nomtable != null && nomtable.compareToIgnoreCase("") != 0)
+            prevision.setNomTable(nomtable);
         prevision.setId(this.getIdPrevision());
         PrevisionComplet[] previsions = (PrevisionComplet[]) CGenUtil.rechercher(prevision, null, null, c, "");
         return previsions[0];
     }
-    public boolean estMemeSens(Prevision autre)
-    {
-        if((this.isDepense()&&autre.isDepense())||(this.isRecette()&&autre.isRecette()))return true;
+
+    public boolean estMemeSens(Prevision autre) {
+        if ((this.isDepense() && autre.isDepense()) || (this.isRecette() && autre.isRecette()))
+            return true;
         return false;
     }
 
+    /**
+     * Attache un encaissement à une ou plusieurs prévisions.
+     * Si l'encaissement est fait AVANT la date d'échéance de la prévision (paiement anticipé) :
+     * - Crée une nouvelle prévision à la date de l'encaissement avec le montant encaissé
+     * - Réduit le montant de la prévision initiale
+     * 
+     * @param listePrevision Liste des prévisions liées à la facture
+     * @param u Utilisateur
+     * @param c Connexion
+     * @return Liste des liens MvtCaissePrevision créés
+     */
     public MvtCaissePrevision[] attacherPrevision(PrevisionComplet[] listePrevision ,String u,Connection c)throws Exception {
         
         ArrayList<MvtCaissePrevision> attachements = new ArrayList<MvtCaissePrevision>();
         double reste = this.getMontantMouvement();
         double valeur=reste;
         int i=0;
+        Date dateEncaissement = this.getDaty();
+        
         for(PrevisionComplet prevision : listePrevision){
             if(prevision.getEcart()>0&&i<listePrevision.length-1){
                 valeur=Math.min(reste,prevision.getEcart());
             }
-            MvtCaissePrevision attachement = new MvtCaissePrevision();
-            attachement.setId1(this.getId());
-            attachement.setId2(prevision.getId());
-            attachement.setMontant(valeur,prevision);
-            attachement.setEtat(this.getEtat());
-            attachement.setDevise("AR");
-            attachement.setTaux(1);
-            attachements.add(attachement);
+            
+            // Vérifier si l'encaissement est fait AVANT la date d'échéance de la prévision
+            Date datePrevision = prevision.getDaty();
+            boolean estPaiementAnticipe = dateEncaissement != null && datePrevision != null 
+                && dateEncaissement.before(datePrevision);
+            
+            if(estPaiementAnticipe && valeur > 0) {
+                // Paiement anticipé : créer une nouvelle prévision à la date de l'encaissement
+                // et réduire le montant de la prévision initiale
+                
+                Prevision nouvellePrevision = creerPrevisionAnticipee(prevision, valeur, dateEncaissement, u, c);
+                
+                // Réduire le montant de la prévision initiale
+                reduirePrevisionInitiale(prevision, valeur, u, c);
+                
+                // Lier l'encaissement à la NOUVELLE prévision (pas l'ancienne)
+                MvtCaissePrevision attachement = new MvtCaissePrevision();
+                attachement.setId1(this.getId());
+                attachement.setId2(nouvellePrevision.getId()); // Lier à la nouvelle prévision
+                attachement.setMontant(valeur, prevision);
+                attachement.setEtat(this.getEtat());
+                attachement.setDevise(this.getIdDevise() != null ? this.getIdDevise() : "AR");
+                attachement.setTaux(this.getTaux() > 0 ? this.getTaux() : 1);
+                attachements.add(attachement);
+                
+                System.out.println("[MvtCaisse.attacherPrevision] Paiement anticipé détecté:");
+                System.out.println("  - Date encaissement: " + dateEncaissement);
+                System.out.println("  - Date prévision initiale: " + datePrevision);
+                System.out.println("  - Montant encaissé: " + valeur);
+                System.out.println("  - Nouvelle prévision créée: " + nouvellePrevision.getId());
+                
+            } else {
+                // Encaissement normal à l'échéance ou après
+                MvtCaissePrevision attachement = new MvtCaissePrevision();
+                attachement.setId1(this.getId());
+                attachement.setId2(prevision.getId());
+                attachement.setMontant(valeur,prevision);
+                attachement.setEtat(this.getEtat());
+                attachement.setDevise(this.getIdDevise() != null ? this.getIdDevise() : "AR");
+                attachement.setTaux(this.getTaux() > 0 ? this.getTaux() : 1);
+                attachements.add(attachement);
+            }
+            
             reste = Math.max(0, reste-valeur);
             valeur=reste;
             if(reste<= 0) break;
@@ -392,265 +515,391 @@ public class MvtCaisse extends ClassEtat{
         }
         return attachements.toArray(new MvtCaissePrevision[attachements.size()]);
     }
+    
+    /**
+     * Crée une nouvelle prévision à la date de l'encaissement anticipé.
+     * Cette prévision représente l'argent effectivement reçu à cette date.
+     * 
+     * @param previsionOrigine Prévision d'origine
+     * @param montant Montant de l'encaissement
+     * @param dateEncaissement Date de l'encaissement
+     * @param u Utilisateur
+     * @param c Connexion
+     * @return La nouvelle prévision créée
+     */
+    private Prevision creerPrevisionAnticipee(PrevisionComplet previsionOrigine, double montant, 
+            Date dateEncaissement, String u, Connection c) throws Exception {
+        
+        Prevision nouvellePrev = new Prevision();
+        nouvellePrev.setMode("modif");
+        nouvellePrev.setDaty(dateEncaissement);
+        
+        // Copier le sens (crédit ou débit)
+        if(previsionOrigine.isRecette()) {
+            nouvellePrev.setCredit(montant);
+            nouvellePrev.setDebit(0);
+        } else {
+            nouvellePrev.setDebit(montant);
+            nouvellePrev.setCredit(0);
+        }
+        
+        // Copier les autres informations de la prévision d'origine
+        nouvellePrev.setIdDevise(previsionOrigine.getIdDevise());
+        nouvellePrev.setTaux(previsionOrigine.getTaux());
+        nouvellePrev.setIdCaisse(previsionOrigine.getIdCaisse());
+        nouvellePrev.setIdFacture(previsionOrigine.getIdFacture());
+        nouvellePrev.setIdTiers(previsionOrigine.getIdTiers());
+        nouvellePrev.setCompte(previsionOrigine.getCompte());
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        nouvellePrev.setDesignation("Encaissement anticipé du " + sdf.format(dateEncaissement) 
+            + " - Prévision initiale: " + previsionOrigine.getId());
+        
+        nouvellePrev.setEtat(previsionOrigine.getEtat());
+        
+        // Créer la nouvelle prévision en base
+        nouvellePrev = (Prevision) nouvellePrev.createObject(u, c);
+        
+        return nouvellePrev;
+    }
+    
+    /**
+     * Réduit le montant de la prévision initiale suite à un paiement anticipé.
+     * Le montant réduit correspond au montant qui a été encaissé en avance.
+     * 
+     * @param previsionOrigine Prévision d'origine à réduire
+     * @param montantEncaisse Montant qui a été encaissé en avance
+     * @param u Utilisateur
+     * @param c Connexion
+     */
+    private void reduirePrevisionInitiale(PrevisionComplet previsionOrigine, double montantEncaisse, 
+            String u, Connection c) throws Exception {
+        
+        // Récupérer la prévision en base pour la modifier
+        Prevision prevEnBase = (Prevision) new Prevision().getById(previsionOrigine.getId(), "PREVISION", c);
+        
+        if(prevEnBase != null) {
+            if(previsionOrigine.isRecette()) {
+                double nouveauCredit = Math.max(0, prevEnBase.getCredit() - montantEncaisse);
+                prevEnBase.setCredit(nouveauCredit);
+                System.out.println("[MvtCaisse.reduirePrevisionInitiale] Crédit réduit de " 
+                    + previsionOrigine.getCredit() + " à " + nouveauCredit);
+            } else {
+                double nouveauDebit = Math.max(0, prevEnBase.getDebit() - montantEncaisse);
+                prevEnBase.setDebit(nouveauDebit);
+                System.out.println("[MvtCaisse.reduirePrevisionInitiale] Débit réduit de " 
+                    + previsionOrigine.getDebit() + " à " + nouveauDebit);
+            }
+            
+            // Mettre à jour la désignation pour tracer la modification
+            String designationOriginale = prevEnBase.getDesignation() != null ? prevEnBase.getDesignation() : "";
+            if(!designationOriginale.contains("(Réduit de")) {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                prevEnBase.setDesignation(designationOriginale + " (Réduit de " + montantEncaisse 
+                    + " le " + sdf.format(new java.util.Date()) + ")");
+            }
+            
+            // Sauvegarder les modifications
+            prevEnBase.updateToTableWithHisto(u, c);
+        }
+    }
 
-    public boolean isDepense()
-    {
-        if(this.getDebit()>0&&this.getCredit()<=0) return true;
+    public boolean isDepense() {
+        if (this.getDebit() > 0 && this.getCredit() <= 0)
+            return true;
         return false;
     }
 
-    public boolean isRecette()
-    {
-        if(this.getCredit()==0)return false;
+    public boolean isRecette() {
+        if (this.getCredit() == 0)
+            return false;
         return !isDepense();
     }
 
-
-
-    public double getMontantMouvement() throws Exception{
-        if(this.isDepense()) return this.getDebit()*this.getTaux();
-        return this.getCredit()*this.getTaux();
+    public double getMontantMouvement() throws Exception {
+        if (this.isDepense())
+            return this.getDebit() * this.getTaux();
+        return this.getCredit() * this.getTaux();
     }
 
-
-    public MvtCaisse attacherPrevision(String idPrevision ,String u,Connection c)throws Exception {
-        MvtCaisse[] mvtCaisseBase = (MvtCaisse[]) CGenUtil.rechercher(new MvtCaisse(), null, null, c, "and ID = '"+this.getId()+"'");
-        if (mvtCaisseBase[0].getIdPrevision()!= null) {
+    public MvtCaisse attacherPrevision(String idPrevision, String u, Connection c) throws Exception {
+        MvtCaisse[] mvtCaisseBase = (MvtCaisse[]) CGenUtil.rechercher(new MvtCaisse(), null, null, c,
+                "and ID = '" + this.getId() + "'");
+        if (mvtCaisseBase[0].getIdPrevision() != null) {
             throw new Exception("Mouvement de Caisse a déjà un Prevision");
         }
         mvtCaisseBase[0].setIdPrevision(idPrevision);
-        mvtCaisseBase[0].attacherPrevision(u,c);
+        mvtCaisseBase[0].attacherPrevision(u, c);
         return mvtCaisseBase[0];
     }
-    
-    public MvtCaisse attacherPrevision(String u ,Connection c)throws Exception {
+
+    public MvtCaisse attacherPrevision(String u, Connection c) throws Exception {
         Prevision prevision = this.getPrevision(c);
-        Prevision[] previsionBase = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, " and ( IDFACTURE = '"+prevision.getIdFacture()+"' or IDORIGINE = '"+this.getIdOrigine()+"' ) ");
+        Prevision[] previsionBase = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, " and ( IDFACTURE = '"
+                + prevision.getIdFacture() + "' or IDORIGINE = '" + this.getIdOrigine() + "' ) ");
         if (previsionBase.length > 0) {
             throw new Exception("la Prevision n'existe pas");
         }
         this.updateToTableWithHisto(u, c);
         return this;
     }
-    
-    public static MvtCaisse[] getAll(String[] ids, Connection co)throws Exception{
+
+    public static MvtCaisse[] getAll(String[] ids, Connection co) throws Exception {
         MvtCaisse mvtCaisse = new MvtCaisse();
-        MvtCaisse[] bls = (MvtCaisse[]) CGenUtil.rechercher(mvtCaisse, null, null,co, " and id in ("+Utilitaire.tabToString(ids, "'", ",")+" ) ");
+        MvtCaisse[] bls = (MvtCaisse[]) CGenUtil.rechercher(mvtCaisse, null, null, co,
+                " and id in (" + Utilitaire.tabToString(ids, "'", ",") + " ) ");
         return bls;
     }
-    
-    public PrevisionComplet[] getPrevisionLie(String nomT,Connection c) throws Exception
-    {
+
+    public PrevisionComplet[] getPrevisionLie(String nomT, Connection c) throws Exception {
         PrevisionComplet prevision = new PrevisionComplet();
-        if(nomT!=null&&nomT.compareToIgnoreCase("")!=0)prevision.setNomTable(nomT);
-        //Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, " and IDFACTURE  = '"+this.getIdOrigine()+"'");
-        PrevisionComplet[] previsionComplets = (PrevisionComplet[]) CGenUtil.rechercher(prevision, null, null, c, " and IDFACTURE  = '"+this.getIdOrigine()+"' order by daty ASC");
+        if (nomT != null && nomT.compareToIgnoreCase("") != 0)
+            prevision.setNomTable(nomT);
+        // Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null,
+        // null, c, " and IDFACTURE = '"+this.getIdOrigine()+"'");
+        PrevisionComplet[] previsionComplets = (PrevisionComplet[]) CGenUtil.rechercher(prevision, null, null, c,
+                " and IDFACTURE  = '" + this.getIdOrigine() + "' order by daty ASC");
         return previsionComplets;
     }
-    
-    
-    public MvtCaissePrevision[] attacherPrevisionAutomatique(String u,Connection c) throws Exception{
+
+    public MvtCaissePrevision[] attacherPrevisionAutomatique(String u, Connection c) throws Exception {
         PrevisionComplet prevision = new PrevisionComplet();
-        //Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, " and IDFACTURE  = '"+this.getIdOrigine()+"'");
-        PrevisionComplet[] previsionComplets =  this.getPrevisionLie("PREVISION_COMPLET_CPLPOSITIF", c);
-        MvtCaissePrevision[] lien=this.attacherPrevision(previsionComplets, u, c);
+        // Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null,
+        // null, c, " and IDFACTURE = '"+this.getIdOrigine()+"'");
+        PrevisionComplet[] previsionComplets = this.getPrevisionLie("PREVISION_COMPLET_CPLPOSITIF", c);
+        MvtCaissePrevision[] lien = this.attacherPrevision(previsionComplets, u, c);
         return lien;
     }
-    public MvtCaissePrevision[] attacherPrevisionAutomatique(String[]id, String u,Connection c) throws Exception{
+
+    public MvtCaissePrevision[] attacherPrevisionAutomatique(String[] id, String u, Connection c) throws Exception {
         PrevisionComplet prevision = new PrevisionComplet();
-        if(this.getEtat()<=ConstanteEtat.getEtatValider())throw new Exception("Mvt Caisse non validé");
-        //Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null, null, c, " and IDFACTURE  = '"+this.getIdOrigine()+"'");
-        String aWhere=Utilitaire.getAWhereIn(id,"id");
-        PrevisionComplet[] previsionComplets = (PrevisionComplet[]) CGenUtil.rechercher(prevision, null, null, c, aWhere+" order by daty ASC");
-        MvtCaissePrevision[] lien=this.attacherPrevision(previsionComplets, u, c);
+        if (this.getEtat() <= ConstanteEtat.getEtatValider())
+            throw new Exception("Mvt Caisse non validé");
+        // Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(prevision, null,
+        // null, c, " and IDFACTURE = '"+this.getIdOrigine()+"'");
+        String aWhere = Utilitaire.getAWhereIn(id, "id");
+        PrevisionComplet[] previsionComplets = (PrevisionComplet[]) CGenUtil.rechercher(prevision, null, null, c,
+                aWhere + " order by daty ASC");
+        MvtCaissePrevision[] lien = this.attacherPrevision(previsionComplets, u, c);
         return lien;
-    } 
-    
+    }
+
     @Override
-    public ClassMAPTable validerObject(String u, Connection c) throws Exception{
-        if(this.getIdOrigine()!=null &&this.getIdOrigine().startsWith("VNT") && this.getIdOrigine().split(";;").length<=1){
+    public ClassMAPTable validerObject(String u, Connection c) throws Exception {
+        if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("VNT")
+                && this.getIdOrigine().split(";;").length <= 1) {
             VenteLib vente = getVenteLib(c);
-            // if(vente.getMontantreste()<this.getCredit()) throw new Exception("Le montant saisi ne doit pas etre superieur au montant reste de la facture client!");
-        } else if(this.getIdOrigine()!=null && this.getIdOrigine().startsWith("AVRFC")){
+            System.out.println(vente.getMontantreste() + " ----- " + this.getCredit());
+            if (vente.getMontantreste() < this.getCredit())
+                throw new Exception(
+                        "Le montant saisi ne doit pas etre superieur au montant reste de la facture client!");
+        } else if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("AVRFC")) {
             AvoirFCLib avoirFC = this.getAvoirFC(c);
-            // if(avoirFC.getResteapayer()<this.getDebit()) throw new Exception("Le montant saisi ne doit pas etre superieur au montant reste de la facture Avoir!");
-        }else if(this.getIdOrigine()!=null &&this.getIdOrigine().startsWith("VNT") && this.getIdOrigine().split(";;").length>1){
-            String [] ids = this.getIdOrigine().split(";;");
-            VenteLib vente = Vente.genererVenteClient(ids,c);
+            if (avoirFC.getResteapayer() < this.getDebit())
+                throw new Exception(
+                        "Le montant saisi ne doit pas etre superieur au montant reste de la facture Avoir!");
+        } else if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("VNT")
+                && this.getIdOrigine().split(";;").length > 1) {
+            String[] ids = this.getIdOrigine().split(";;");
+            VenteLib vente = Vente.genererVenteClient(ids, c);
             assert vente != null;
-            // if(vente.getMontantreste()<this.getCredit()) throw new Exception("Le montant saisi ne doit pas etre superieur au montant reste de la facture client!");
+            if (vente.getMontantreste() < this.getCredit())
+                throw new Exception(
+                        "Le montant saisi ne doit pas etre superieur au montant reste de la facture client!");
         }
 
+        // Prevision[] previsions = (Prevision[]) CGenUtil.rechercher(new Prevision(), null, null, c,
+        //         " and ID = '" + this.getIdPrevision() + "' ");
+
+        // if (previsions.length > 0) {
+        //     Prevision prevision = previsions[0];
+        //     if (this.isDepense()) {
+        //         prevision.setDebit(prevision.getDebit() - this.getDebit());
+        //     } else if (this.isRecette()) {
+        //         prevision.setCredit(prevision.getCredit() - this.getCredit());
+        //     } else if (!this.isDepense() && !this.isRecette()) {
+        //         prevision.setDebit(prevision.getDebit() - this.getDebit());
+        //         prevision.setCredit(prevision.getCredit() - this.getCredit());
+        //     }
+        //     prevision.updateToTableWithHisto(u, c);
+        // }
+
         double montant = this.getMontantMouvement();
-        LiaisonPaiement [] liaisonPaiements = (LiaisonPaiement[]) CGenUtil.rechercher(new LiaisonPaiement(), null, null, c, " and id1 = '"+this.getId()+"'");
-        if(this.getIdOrigine()!=null && this.getIdOrigine().compareToIgnoreCase("")!=0 && liaisonPaiements.length<=0){
-            String [] origines = this.getIdOrigine().split(";;");
-            if(origines.length>0){
+        LiaisonPaiement[] liaisonPaiements = (LiaisonPaiement[]) CGenUtil.rechercher(new LiaisonPaiement(), null, null,
+                c, " and id1 = '" + this.getId() + "'");
+        if (this.getIdOrigine() != null && this.getIdOrigine().compareToIgnoreCase("") != 0
+                && liaisonPaiements.length <= 0) {
+            String[] origines = this.getIdOrigine().split(";;");
+            if (origines.length > 0) {
                 for (int i = 0; i < origines.length; i++) {
-                    if(this.getIdOrigine().startsWith("VNT")){
-                        VenteLib vente = (VenteLib) new VenteLib().getById(origines[i],"VENTE_CPL",c);
+                    if (this.getIdOrigine().startsWith("VNT")) {
+                        VenteLib vente = (VenteLib) new VenteLib().getById(origines[i], "VENTE_CPL", c);
                         montant -= vente.getMontantreste();
                         LiaisonPaiement paiement = new LiaisonPaiement();
                         paiement.setId1(this.getId());
                         paiement.setId2(origines[i]);
-                        if(montant<=0){
-                            paiement.setMontant(vente.getMontantreste()+montant);
-                            paiement.createObject(u,c);
-                            paiement.validerObject(u,c);
+                        if (montant <= 0) {
+                            paiement.setMontant(vente.getMontantreste() + montant);
+                            paiement.createObject(u, c);
+                            paiement.validerObject(u, c);
                             break;
-                        }else{
+                        } else {
                             paiement.setMontant(vente.getMontantreste());
-                            paiement.createObject(u,c);
-                            paiement.validerObject(u,c);
+                            paiement.createObject(u, c);
+                            paiement.validerObject(u, c);
                         }
-                    }else if(this.getIdOrigine().startsWith("FCF")){
-                        FactureFournisseurCpl fc = (FactureFournisseurCpl) new FactureFournisseurCpl().getById(origines[i],"FACTUREFOURNISSEURCPL",c);
+                    } else if (this.getIdOrigine().startsWith("FCF")) {
+                        FactureFournisseurCpl fc = (FactureFournisseurCpl) new FactureFournisseurCpl()
+                                .getById(origines[i], "FACTUREFOURNISSEURCPL", c);
                         montant -= fc.getMontantreste();
                         LiaisonPaiement paiement = new LiaisonPaiement();
                         paiement.setId1(this.getId());
                         paiement.setId2(origines[i]);
-                        if(montant<=0){
-                            paiement.setMontant(fc.getMontantreste()+montant);
-                            paiement.createObject(u,c);
-                            paiement.validerObject(u,c);
+                        if (montant <= 0) {
+                            paiement.setMontant(fc.getMontantreste() + montant);
+                            paiement.createObject(u, c);
+                            paiement.validerObject(u, c);
                             break;
-                        }else{
+                        } else {
                             paiement.setMontant(fc.getMontantreste());
-                            paiement.createObject(u,c);
-                            paiement.validerObject(u,c);
+                            paiement.createObject(u, c);
+                            paiement.validerObject(u, c);
                         }
-                    } else if(this.getIdOrigine().startsWith("TR") && this.getTraite()!=null){
+                    } else if (this.getIdOrigine().startsWith("TR") && this.getTraite() != null) {
                         montant = this.traite.getMontant();
                         LiaisonPaiement paiement = new LiaisonPaiement();
                         paiement.setId1(this.getId());
                         paiement.setId2(origines[i]);
                         paiement.setMontant(montant);
-                        paiement.createObject(u,c);
-                        paiement.validerObject(u,c);
+                        paiement.createObject(u, c);
+                        paiement.validerObject(u, c);
                         break;
                     }
                 }
             }
         }
         super.validerObject(u, c);
-        if(this.getIdOrigine()!=null&&this.getIdOrigine().compareToIgnoreCase("")!=0&&this.getIdOrigine().startsWith("VNT"))
-        {
-            String [] ids = this.getIdOrigine().split(";;");
-            VenteLib vente = Vente.genererVenteClient(ids,c);
+        if (this.getIdOrigine() != null && this.getIdOrigine().compareToIgnoreCase("") != 0
+                && this.getIdOrigine().startsWith("VNT")) {
+            String[] ids = this.getIdOrigine().split(";;");
+            VenteLib vente = Vente.genererVenteClient(ids, c);
             LiaisonPaiement li = new LiaisonPaiement();
-            LiaisonPaiement[] bls = (LiaisonPaiement[]) CGenUtil.rechercher(li, null, null,c, " and id2 in ("+Utilitaire.tabToString(ids, "'", ",")+" ) ");
+            LiaisonPaiement[] bls = (LiaisonPaiement[]) CGenUtil.rechercher(li, null, null, c,
+                    " and id2 in (" + Utilitaire.tabToString(ids, "'", ",") + " ) ");
             for (int i = 0; i < bls.length; i++) {
                 bls[i].validerObject(u, c);
             }
             MvtCaissePrevision[] lienMvtPrev = this.attacherPrevisionAutomatique(u, c);
-            for(MvtCaissePrevision mvt:lienMvtPrev)
-            {
+            for (MvtCaissePrevision mvt : lienMvtPrev) {
                 mvt.createObject(u, c);
             }
         }
-        if(this.getDebit()>0){
+        if (this.getDebit() > 0) {
             genererEcritureDecaissement(u, c);
-        }else if(this.getCredit()>0){
+        } else if (this.getCredit() > 0) {
 
             genererEcritureEncaissement(u, c);
         }
         return this;
     }
-    
-    public void genererEcritureDecaissement(String u, Connection c) throws Exception{
+
+    public void genererEcritureDecaissement(String u, Connection c) throws Exception {
         ComptaEcriture mere = new ComptaEcriture();
         Date dateDuJour = utilitaire.Utilitaire.dateDuJourSql();
         int exercice = utilitaire.Utilitaire.getAnnee(daty);
         mere.setDaty(dateDuJour);
         mere.setDesignation(this.getDesignation());
-        mere.setExercice(""+exercice);
+        mere.setExercice("" + exercice);
         mere.setDateComptable(this.getDaty());
         mere.setJournal(ConstanteStation.journalCaisse);
-        if(this.getIdOrigine()!=null&&this.getIdOrigine().startsWith("AVRFC")){
+        if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("AVRFC")) {
             mere.setJournal(ConstanteStation.journalCaisse);
         }
         mere.setOrigine(this.getId());
         mere.setIdobjet(this.getId());
         mere.createObject(u, c);
         ComptaSousEcriture[] filles = this.genererSousEcritureDecaissement(c);
-        for(int i=0; i<filles.length; i++){
+        for (int i = 0; i < filles.length; i++) {
             filles[i].setIdMere(mere.getId());
             filles[i].setExercice(exercice);
             filles[i].setDaty(this.getDaty());
             filles[i].setJournal(ConstanteStation.journalCaisse);
-            
-            if(filles[i].getDebit()>0 || filles[i].getCredit()>0) filles[i].createObject(u, c);
+
+            if (filles[i].getDebit() > 0 || filles[i].getCredit() > 0)
+                filles[i].createObject(u, c);
         }
     }
-    
-    public ComptaSousEcriture[] genererSousEcritureDecaissement(Connection c) throws Exception{
-        ComptaSousEcriture[] compta={};
-        boolean canClose=false;
-        try{
-            if(c==null){
-                c=new UtilDB().GetConn();
-                canClose=true;
+
+    public ComptaSousEcriture[] genererSousEcritureDecaissement(Connection c) throws Exception {
+        ComptaSousEcriture[] compta = {};
+        boolean canClose = false;
+        try {
+            if (c == null) {
+                c = new UtilDB().GetConn();
+                canClose = true;
             }
             String compte2 = "";
             String compte_aux = "";
             String designation2 = "";
-            if(this.getIdOrigine()!=null&&this.getIdOrigine().startsWith("FCF")){
+            if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("FCF")) {
                 FactureFournisseur ff = getFactureFournisseur(c);
                 compte2 = ff.getCompte();
-                designation2 = "FF "+ff.getFournisseurlib();
-                this.setCredit(this.getCredit()*ff.getTaux());
+                designation2 = "FF " + ff.getFournisseurlib();
+                this.setCredit(this.getCredit() * ff.getTaux());
                 compte_aux = ff.getCompteauxiliaire();
-            } else if(this.getIdOrigine()!=null&&this.getIdOrigine().startsWith("PGI")){
+            } else if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("PGI")) {
                 PerteGainImprevueLib perteGainImprevue = getPerteGainImprevue(c);
                 compte2 = perteGainImprevue.getTierscompte();
-                designation2 = "Perte "+perteGainImprevue.getTiers();
+                designation2 = "Perte " + perteGainImprevue.getTiers();
                 compte_aux = perteGainImprevue.getCompteauxiliaire();
-            } else if(this.getIdOrigine()!=null&&this.getIdOrigine().startsWith("AVRFC")){
+            } else if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("AVRFC")) {
                 AvoirFCLib avoir = this.getAvoirFC(c);
                 compte2 = avoir.getCompte();
-                designation2 = "Avoir "+avoir.getClientlib();
+                designation2 = "Avoir " + avoir.getClientlib();
                 compte_aux = avoir.getCompteauxiliaire();
-            }else{
-                Tiers tr=this.getTiers(null, c);
-                if(tr==null)throw new Exception("Tiers vide");
+            } else {
+                Tiers tr = this.getTiers(null, c);
+                if (tr == null)
+                    throw new Exception("Tiers vide");
                 compte2 = tr.getCompte();
                 compte_aux = tr.getCompteauxiliaire();
             }
-            
-            //this.setCompte(facturefournisseurs[0].getCompte());
+
+            // this.setCompte(facturefournisseurs[0].getCompte());
 
             compta = new ComptaSousEcriture[2];
-            
-            compta[0]=new ComptaSousEcriture();
+
+            compta[0] = new ComptaSousEcriture();
             compta[0].setLibellePiece(this.getDesignation());
             compta[0].setRemarque(this.getDesignation());
             compta[0].setCompte(getCaisse(c).getCompte());
             compta[0].setCredit(this.getDebit());
-            
-            compta[1]=new ComptaSousEcriture();
-            compta[1].setLibellePiece("Decaissement "+designation2);
-            compta[1].setRemarque("Decaissement "+designation2);
+
+            compta[1] = new ComptaSousEcriture();
+            compta[1].setLibellePiece("Decaissement " + designation2);
+            compta[1].setRemarque("Decaissement " + designation2);
             compta[1].setCompte(compte2);
-//            compta[i].setDebit((montantHT-retenue) * ((this.getTva()/100)));
+            // compta[i].setDebit((montantHT-retenue) * ((this.getTva()/100)));
             compta[1].setDebit(this.getDebit());
             compta[1].setCompte_aux(compte_aux);
-            
-        } catch(Exception e){
+
+        } catch (Exception e) {
             throw e;
         } finally {
-            if(canClose){
+            if (canClose) {
                 c.close();
             }
         }
         return compta;
     }
-    
+
     public Caisse getCaisse(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
         }
         Caisse caisse = new Caisse();
-        Caisse[] caisses = (Caisse[]) CGenUtil.rechercher(caisse, null, null, c, " and id = '"+this.getIdCaisse()+"'");
+        Caisse[] caisses = (Caisse[]) CGenUtil.rechercher(caisse, null, null, c,
+                " and id = '" + this.getIdCaisse() + "'");
         if (caisses.length > 0) {
             return caisses[0];
         }
@@ -659,23 +908,24 @@ public class MvtCaisse extends ClassEtat{
 
     public Caisse getCaisse() throws Exception {
         Connection c = null;
-        try{
-            if(c==null){
-                c=new UtilDB().GetConn();
+        try {
+            if (c == null) {
+                c = new UtilDB().GetConn();
             }
             Caisse caisse = new Caisse();
-            Caisse[] caisses = (Caisse[]) CGenUtil.rechercher(caisse, null, null, c, " and id = '"+this.getIdCaisse()+"'");
+            Caisse[] caisses = (Caisse[]) CGenUtil.rechercher(caisse, null, null, c,
+                    " and id = '" + this.getIdCaisse() + "'");
             if (caisses.length > 0) {
                 return caisses[0];
             }
             return null;
-        } catch(Exception e){
+        } catch (Exception e) {
             throw e;
         } finally {
             c.close();
         }
     }
-    
+
     public Vente getVente(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
@@ -688,7 +938,7 @@ public class MvtCaisse extends ClassEtat{
         }
         return null;
     }
-    
+
     public VenteLib getVenteLib(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
@@ -702,7 +952,7 @@ public class MvtCaisse extends ClassEtat{
         }
         return null;
     }
-    
+
     public FactureFournisseur getFactureFournisseur(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
@@ -715,8 +965,7 @@ public class MvtCaisse extends ClassEtat{
         }
         return null;
     }
-    
-    
+
     public PerteGainImprevueLib getPerteGainImprevue(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
@@ -729,7 +978,7 @@ public class MvtCaisse extends ClassEtat{
         }
         return null;
     }
-    
+
     public AvoirFCLib getAvoirFC(Connection c) throws Exception {
         if (c == null) {
             throw new Exception("Connection non etablie");
@@ -743,78 +992,79 @@ public class MvtCaisse extends ClassEtat{
         }
         return null;
     }
-    
-    public void genererEcritureEncaissement(String u, Connection c) throws Exception{
+
+    public void genererEcritureEncaissement(String u, Connection c) throws Exception {
         ComptaEcriture mere = new ComptaEcriture();
         Date dateDuJour = utilitaire.Utilitaire.dateDuJourSql();
         int exercice = utilitaire.Utilitaire.getAnnee(daty);
         mere.setDaty(dateDuJour);
         mere.setDesignation(this.getDesignation());
-        mere.setExercice(""+exercice);
+        mere.setExercice("" + exercice);
         mere.setDateComptable(this.getDaty());
         mere.setJournal(ConstanteStation.journalCaisse);
         mere.setOrigine(this.getId());
         mere.setIdobjet(this.getId());
         mere.createObject(u, c);
-        ComptaSousEcriture[] filles = this.genererSousEcritureEncaissement(u,c);
-        for(int i=0; i<filles.length; i++){
+        ComptaSousEcriture[] filles = this.genererSousEcritureEncaissement(u, c);
+        for (int i = 0; i < filles.length; i++) {
             filles[i].setIdMere(mere.getId());
             filles[i].setExercice(exercice);
             filles[i].setDaty(this.getDaty());
             filles[i].setJournal(ConstanteStation.journalCaisse);
-            
-            if(filles[i].getDebit()>0 || filles[i].getCredit()>0) filles[i].createObject(u, c);
+
+            if (filles[i].getDebit() > 0 || filles[i].getCredit() > 0)
+                filles[i].createObject(u, c);
         }
     }
-    
-    public ComptaSousEcriture[] genererSousEcritureEncaissement(String refUser,Connection c) throws Exception{
-        ComptaSousEcriture[] compta={};
-        boolean canClose=false;
-        try{
-            if(c==null){
-                c=new UtilDB().GetConn();
-                canClose=true;
+
+    public ComptaSousEcriture[] genererSousEcritureEncaissement(String refUser, Connection c) throws Exception {
+        ComptaSousEcriture[] compta = {};
+        boolean canClose = false;
+        try {
+            if (c == null) {
+                c = new UtilDB().GetConn();
+                canClose = true;
             }
-            String nt=new Client().getNomTable();
-            if(this.getDebit()>0)nt=new Fournisseur().getNomTable();
-            System.out.println("NIM TABLEEEE "+nt);
-            Tiers tr=this.getTiers(nt, c);
-            if(tr==null)throw new Exception("Tiers vide");
+            String nt = new Client().getNomTable();
+            if (this.getDebit() > 0)
+                nt = new Fournisseur().getNomTable();
+            System.out.println("NIM TABLEEEE " + nt);
+            Tiers tr = this.getTiers(nt, c);
+            if (tr == null)
+                throw new Exception("Tiers vide");
             String compte2 = tr.getCompte();
             String designation2 = "";
-            if(this.getIdOrigine()!=null &&this.getIdOrigine().startsWith("VNT")){
-                String [] ids = this.getIdOrigine().split(";;");
-                VenteLib vente = Vente.genererVenteClient(ids,c);
-                
-                designation2 = "Vente "+vente.getClientlib();
-                this.setCredit(this.getCredit()*vente.getTauxdechange());
-            } else if(this.getIdOrigine()!=null &&this.getIdOrigine().startsWith("PGI")){
+            if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("VNT")) {
+                String[] ids = this.getIdOrigine().split(";;");
+                VenteLib vente = Vente.genererVenteClient(ids, c);
+
+                designation2 = "Vente " + vente.getClientlib();
+                this.setCredit(this.getCredit() * vente.getTauxdechange());
+            } else if (this.getIdOrigine() != null && this.getIdOrigine().startsWith("PGI")) {
                 PerteGainImprevueLib perteGainImprevue = getPerteGainImprevue(c);
-                
-                designation2 = "Gain "+perteGainImprevue.getTiers();
+
+                designation2 = "Gain " + perteGainImprevue.getTiers();
             }
-            
-            
 
             compta = new ComptaSousEcriture[2];
             Caisse caisse = getCaisse(c);
-            compta[0]=new ComptaSousEcriture();
+            compta[0] = new ComptaSousEcriture();
             compta[0].setLibellePiece(this.getDesignation());
             compta[0].setRemarque(this.getDesignation());
             compta[0].setCompte(caisse.getCompte());
             compta[0].setDebit(this.getCredit());
 
-            compta[1]=new ComptaSousEcriture();
-            compta[1].setLibellePiece("Encaissement "+designation2);
-            compta[1].setRemarque("Encaissement "+designation2);
+            compta[1] = new ComptaSousEcriture();
+            compta[1].setLibellePiece("Encaissement " + designation2);
+            compta[1].setRemarque("Encaissement " + designation2);
             compta[1].setCompte(compte2);
             compta[1].setCredit(this.getCredit());
             compta[1].setCompte_aux(tr.getCompteauxiliaire());
-            
-        } catch(Exception e){
+
+        } catch (Exception e) {
             throw e;
         } finally {
-            if(canClose){
+            if (canClose) {
                 c.close();
             }
         }
@@ -822,7 +1072,7 @@ public class MvtCaisse extends ClassEtat{
     }
 
     public String getIdDevise() {
-	 return idDevise;
+        return idDevise;
     }
 
     public void setIdDevise(String idDevise) throws Exception {
@@ -831,67 +1081,71 @@ public class MvtCaisse extends ClassEtat{
 	     if(idDevise==null||idDevise.isEmpty())
 		  throw  new Exception ("Devise obligatoire");
 	 }
-	 this.idDevise = idDevise;
+	 // Extraire le code devise si format composite "CODE|dateDebut|dateFin"
+	 if(idDevise != null && idDevise.contains("|")) {
+	     String[] parts = idDevise.split("\\|");
+	     this.idDevise = parts[0]; // Stocker uniquement le code
+	 } else {
+	     this.idDevise = idDevise;
+	 }
     }
 
     public double getTaux() {
-        if(taux==0) return 1;
+        if (taux == 0)
+            return 1;
         return taux;
     }
 
     public void setTaux(double taux) throws Exception {
-	 if(this.getMode().compareTo("modif")==0)
-        {
-            if(taux==0)
-                this.taux=1;
+        if (this.getMode().compareTo("modif") == 0) {
+            if (taux == 0)
+                this.taux = 1;
         }
-	 this.taux = taux;
+        this.taux = taux;
     }
 
     public String getIdTiers() {
-	 return idTiers;
+        return idTiers;
     }
-    public Tiers getTiers(String nT,Connection c) throws Exception
-    {
-        Tiers crt=new Tiers();
+
+    public Tiers getTiers(String nT, Connection c) throws Exception {
+        Tiers crt = new Tiers();
         crt.setNomTable(nT);
         crt.setId(this.getIdTiers());
-        Tiers[] retour=(Tiers[])CGenUtil.rechercher(crt, null, null, c, "");
-        if(retour.length==0) return null;
+        Tiers[] retour = (Tiers[]) CGenUtil.rechercher(crt, null, null, c, "");
+        if (retour.length == 0)
+            return null;
         return retour[0];
     }
 
     public void setIdTiers(String idTiers) throws Exception {
-        if(this.getMode().compareTo("modif")==0)
-        {
-            if(idTiers==null||idTiers.compareToIgnoreCase("")==0)
+        if (this.getMode().compareTo("modif") == 0) {
+            if (idTiers == null || idTiers.compareToIgnoreCase("") == 0)
                 throw new Exception("Tiers obligatoire");
         }
-	 this.idTiers = idTiers;
+        this.idTiers = idTiers;
     }
 
     public void attacherPrevision(String[] ids, String u, Connection c) throws Exception {
-        boolean canClose=false;
-        try{
-            if(c==null){
-                c=new UtilDB().GetConn();
-                canClose=true;
+        boolean canClose = false;
+        try {
+            if (c == null) {
+                c = new UtilDB().GetConn();
+                canClose = true;
             }
-        MvtCaisse mvtcaisse = (MvtCaisse) this.getById(this.getId(), this.getNomTable(), c);
-        PrevisionComplet[] previsionComplets = PrevisionComplet.getAll(ids, c);
-        MvtCaissePrevision[] mvt = mvtcaisse.attacherPrevision(previsionComplets, u, c);
-        for (int i = 0; i < mvt.length; i++) {
-            mvt[i].createObject(u, c);
-        }
-        } catch(Exception e){
+            MvtCaisse mvtcaisse = (MvtCaisse) this.getById(this.getId(), this.getNomTable(), c);
+            PrevisionComplet[] previsionComplets = PrevisionComplet.getAll(ids, c);
+            MvtCaissePrevision[] mvt = mvtcaisse.attacherPrevision(previsionComplets, u, c);
+            for (int i = 0; i < mvt.length; i++) {
+                mvt[i].createObject(u, c);
+            }
+        } catch (Exception e) {
             throw e;
         } finally {
-            if(canClose){
+            if (canClose) {
                 c.close();
             }
         }
     }
-
-    
 
 }

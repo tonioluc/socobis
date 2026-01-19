@@ -5,10 +5,14 @@ import itu.socobis.back.dto.FabricationHistoriqueDTO.FabricationLigneDTO;
 import itu.socobis.back.entity.*;
 import itu.socobis.back.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -130,6 +134,7 @@ public class FabricationService {
 
     /**
      * Exécute une fabrication : décrémente les stocks des ingrédients et incrémente le stock du produit fini.
+     * Basé sur le workflow SOCOBIS : CRÉÉ (1) -> VALIDÉ (11) -> ENTAMÉ (21) -> TERMINÉ (41)
      */
     @Transactional
     public FabricationHistoriqueDTO executerFabrication(String produitId, BigDecimal quantite) {
@@ -146,8 +151,8 @@ public class FabricationService {
         fabrication.setId(newId);
         fabrication.setCible(produitId); // CIBLE contient l'ID du produit à fabriquer
         fabrication.setLibelle("Fabrication de " + simulation.getProduitLibelle() + " x " + quantite);
-        fabrication.setDaty(java.time.LocalDate.now());
-        fabrication.setEtat(15); // 15 = terminée
+        fabrication.setDaty(LocalDate.now());
+        fabrication.setEtat(Fabrication.ETAT_TERMINE); // Exécution directe = TERMINÉ (41)
         
         fabrication = fabricationRepository.save(fabrication);
         
@@ -158,7 +163,7 @@ public class FabricationService {
         for (FormuleItemDTO besoin : simulation.getBesoins()) {
             // Créer la ligne de fabrication
             FabricationFille ligne = new FabricationFille();
-            ligne.setId(newId + "_" + (++ligneCount));
+            ligne.setId(generateFabricationFilleId());
             ligne.setIdMere(fabrication.getId());
             ligne.setIdIngredients(besoin.getItemId());
             ligne.setLibelle(besoin.getLibelle());
@@ -191,31 +196,219 @@ public class FabricationService {
         historique.setQuantite(quantite);
         historique.setUnite(simulation.getProduitUnite());
         historique.setDateFabrication(fabrication.getDaty().atStartOfDay());
-        historique.setStatut(getStatutLabel(fabrication.getEtat()));
+        historique.setStatut(fabrication.chaineEtat());
         historique.setLignes(lignes);
         
         return historique;
     }
 
     /**
-     * Génère un nouvel ID pour une fabrication.
+     * Créer une fabrication (état CRÉÉ = 1).
+     * Basé sur la logique de fabrication-saisie.jsp
      */
-    private String generateFabricationId() {
-        return "FAB-" + System.currentTimeMillis();
+    @Transactional
+    public FabricationHistoriqueDTO creerFabrication(String produitId, BigDecimal quantite) {
+        Optional<Ingredient> produitOpt = ingredientRepository.findById(produitId);
+        if (produitOpt.isEmpty()) {
+            throw new RuntimeException("Produit non trouvé");
+        }
+        
+        Ingredient produit = produitOpt.get();
+        
+        // Créer l'enregistrement de fabrication
+        Fabrication fabrication = new Fabrication();
+        String newId = generateFabricationId();
+        fabrication.setId(newId);
+        fabrication.setCible(produitId);
+        fabrication.setLibelle("Fabrication de " + produit.getLibelle() + " x " + quantite);
+        fabrication.setDaty(LocalDate.now());
+        fabrication.setEtat(Fabrication.ETAT_CREE); // État CRÉÉ (1)
+        
+        fabrication = fabricationRepository.save(fabrication);
+        
+        // Récupérer la recette pour créer les lignes
+        List<Recette> recettes = recetteRepository.findByIdProduitsWithIngredient(produitId);
+        List<FabricationLigneDTO> lignes = new ArrayList<>();
+        
+        for (Recette recette : recettes) {
+            Ingredient ingredient = recette.getIngredient();
+            if (ingredient == null) continue;
+            
+            BigDecimal qteParUnite = recette.getQuantite() != null ? recette.getQuantite() : BigDecimal.ONE;
+            BigDecimal besoinTotal = qteParUnite.multiply(quantite);
+            
+            FabricationFille ligne = new FabricationFille();
+            ligne.setId(generateFabricationFilleId());
+            ligne.setIdMere(fabrication.getId());
+            ligne.setIdIngredients(ingredient.getId());
+            ligne.setLibelle(ingredient.getLibelle());
+            ligne.setQte(besoinTotal);
+            ligne.setIdUnite(ingredient.getUnite());
+            
+            fabricationFilleRepository.save(ligne);
+            
+            FabricationLigneDTO ligneDTO = new FabricationLigneDTO();
+            ligneDTO.setIngredientId(ingredient.getId());
+            ligneDTO.setIngredientLibelle(ingredient.getLibelle());
+            ligneDTO.setType(determineType(ingredient.getTypeIngredient()));
+            ligneDTO.setQuantiteUtilisee(besoinTotal);
+            ligneDTO.setUnite(ingredient.getUnite());
+            lignes.add(ligneDTO);
+        }
+        
+        FabricationHistoriqueDTO dto = new FabricationHistoriqueDTO();
+        dto.setId(fabrication.getId());
+        dto.setProduitId(produitId);
+        dto.setProduitLibelle(produit.getLibelle());
+        dto.setQuantite(quantite);
+        dto.setUnite(produit.getUnite());
+        dto.setDateFabrication(fabrication.getDaty().atStartOfDay());
+        dto.setStatut(fabrication.chaineEtat());
+        dto.setLignes(lignes);
+        
+        return dto;
     }
 
     /**
-     * Convertit le code état en libellé.
+     * Valider une fabrication (passer de CRÉÉ à VALIDÉ).
+     * Basé sur valider() de fabrication-saisie.jsp
      */
-    private String getStatutLabel(Integer etat) {
-        if (etat == null) return "INCONNU";
-        switch (etat) {
-            case 1: return "BROUILLON";
-            case 5: return "VALIDEE";
-            case 10: return "EN_COURS";
-            case 15: return "TERMINE";
-            case -5: return "ANNULEE";
-            default: return "INCONNU";
+    @Transactional
+    public FabricationHistoriqueDTO validerFabrication(String fabricationId) {
+        Fabrication fabrication = fabricationRepository.findById(fabricationId)
+            .orElseThrow(() -> new RuntimeException("Fabrication non trouvée: " + fabricationId));
+        
+        if (fabrication.getEtat() != Fabrication.ETAT_CREE) {
+            throw new RuntimeException("Seule une fabrication CRÉÉE peut être validée. État actuel: " + fabrication.chaineEtat());
+        }
+        
+        fabrication.setEtat(Fabrication.ETAT_VALIDE);
+        fabricationRepository.save(fabrication);
+        
+        return toHistoriqueDTO(fabrication);
+    }
+
+    /**
+     * Entamer une fabrication (passer de VALIDÉ à ENTAMÉ).
+     * Basé sur entamer() de fabrication-saisie.jsp
+     */
+    @Transactional
+    public FabricationHistoriqueDTO entamerFabrication(String fabricationId) {
+        Fabrication fabrication = fabricationRepository.findById(fabricationId)
+            .orElseThrow(() -> new RuntimeException("Fabrication non trouvée: " + fabricationId));
+        
+        if (!fabrication.canEntamer()) {
+            throw new RuntimeException("Seule une fabrication VALIDÉE peut être entamée. État actuel: " + fabrication.chaineEtat());
+        }
+        
+        fabrication.setEtat(Fabrication.ETAT_ENTAME);
+        fabricationRepository.save(fabrication);
+        
+        // Décrémenter les stocks des ingrédients
+        List<FabricationFille> lignes = fabricationFilleRepository.findByIdMereWithIngredient(fabricationId);
+        for (FabricationFille ligne : lignes) {
+            if (ligne.getQte() != null && ligne.getIdIngredients() != null) {
+                ingredientService.decrementerStock(ligne.getIdIngredients(), ligne.getQte());
+            }
+        }
+        
+        return toHistoriqueDTO(fabrication);
+    }
+
+    /**
+     * Bloquer une fabrication (passer à état BLOQUÉ).
+     */
+    @Transactional
+    public FabricationHistoriqueDTO bloquerFabrication(String fabricationId) {
+        Fabrication fabrication = fabricationRepository.findById(fabricationId)
+            .orElseThrow(() -> new RuntimeException("Fabrication non trouvée: " + fabricationId));
+        
+        if (fabrication.getEtat() != Fabrication.ETAT_ENTAME) {
+            throw new RuntimeException("Seule une fabrication ENTAMÉE peut être bloquée. État actuel: " + fabrication.chaineEtat());
+        }
+        
+        fabrication.setEtat(Fabrication.ETAT_BLOQUE);
+        fabricationRepository.save(fabrication);
+        
+        return toHistoriqueDTO(fabrication);
+    }
+
+    /**
+     * Débloquer une fabrication (retourner à état ENTAMÉ).
+     */
+    @Transactional
+    public FabricationHistoriqueDTO debloquerFabrication(String fabricationId) {
+        Fabrication fabrication = fabricationRepository.findById(fabricationId)
+            .orElseThrow(() -> new RuntimeException("Fabrication non trouvée: " + fabricationId));
+        
+        if (fabrication.getEtat() != Fabrication.ETAT_BLOQUE) {
+            throw new RuntimeException("Seule une fabrication BLOQUÉE peut être débloquée. État actuel: " + fabrication.chaineEtat());
+        }
+        
+        fabrication.setEtat(Fabrication.ETAT_ENTAME);
+        fabricationRepository.save(fabrication);
+        
+        return toHistoriqueDTO(fabrication);
+    }
+
+    /**
+     * Terminer une fabrication (passer de ENTAMÉ à TERMINÉ).
+     * Basé sur terminer() de fabrication-saisie.jsp
+     */
+    @Transactional
+    public FabricationHistoriqueDTO terminerFabrication(String fabricationId) {
+        Fabrication fabrication = fabricationRepository.findById(fabricationId)
+            .orElseThrow(() -> new RuntimeException("Fabrication non trouvée: " + fabricationId));
+        
+        if (!fabrication.canTerminer()) {
+            throw new RuntimeException("Seule une fabrication ENTAMÉE peut être terminée. État actuel: " + fabrication.chaineEtat());
+        }
+        
+        fabrication.setEtat(Fabrication.ETAT_TERMINE);
+        fabricationRepository.save(fabrication);
+        
+        // Incrémenter le stock du produit fini
+        if (fabrication.getCible() != null) {
+            // Calculer la quantité fabriquée
+            List<FabricationFille> lignes = fabricationFilleRepository.findByIdMereWithIngredient(fabricationId);
+            BigDecimal qteFabriquee = lignes.stream()
+                .map(FabricationFille::getQte)
+                .filter(q -> q != null)
+                .findFirst()
+                .orElse(BigDecimal.ONE);
+            
+            ingredientService.incrementerStock(fabrication.getCible(), qteFabriquee);
+        }
+        
+        return toHistoriqueDTO(fabrication);
+    }
+
+    /**
+     * Génère un nouvel ID pour une fabrication.
+     * Format: FAB + 6 chiffres (ex: FAB002910)
+     * Basé sur preparePk("FAB", "getSeqFab") de l'EJB SOCOBIS
+     */
+    private String generateFabricationId() {
+        try {
+            return fabricationRepository.generateNextFabId();
+        } catch (Exception e) {
+            // Fallback si la séquence n'existe pas
+            long count = fabricationRepository.count();
+            return String.format("FAB%06d", count + 1);
+        }
+    }
+
+    /**
+     * Génère un nouvel ID pour une ligne de fabrication.
+     * Format: FABF + 6 chiffres (ex: FABF000123)
+     */
+    private String generateFabricationFilleId() {
+        try {
+            return fabricationRepository.generateNextFabFilleId();
+        } catch (Exception e) {
+            // Fallback si la séquence n'existe pas
+            long count = fabricationFilleRepository.count();
+            return String.format("FABF%06d", count + 1);
         }
     }
 
@@ -224,57 +417,107 @@ public class FabricationService {
      */
     public List<FabricationHistoriqueDTO> getHistoriqueFabrications() {
         List<Fabrication> fabrications = fabricationRepository.findAllOrderByDateDesc();
+        return fabrications.stream().map(this::toHistoriqueDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère l'historique avec pagination (compatible Oracle 11g).
+     * Utilise ROWNUM au lieu de FETCH FIRST.
+     */
+    public Page<FabricationHistoriqueDTO> getHistoriqueFabricationsPage(int page, int size) {
+        int startRow = page * size;
+        int endRow = startRow + size;
         
-        return fabrications.stream().map(fab -> {
-            FabricationHistoriqueDTO dto = new FabricationHistoriqueDTO();
-            dto.setId(fab.getId());
-            dto.setProduitId(fab.getCible()); // CIBLE contient l'ID du produit
-            dto.setStatut(getStatutLabel(fab.getEtat()));
+        List<Fabrication> fabrications = fabricationRepository.findAllOrderByDateDescPaginated(startRow, endRow);
+        long total = fabricationRepository.countAll();
+        
+        List<FabricationHistoriqueDTO> dtos = fabrications.stream()
+            .map(this::toHistoriqueDTO)
+            .collect(Collectors.toList());
+        
+        return new org.springframework.data.domain.PageImpl<>(dtos, PageRequest.of(page, size), total);
+    }
+
+    /**
+     * Récupère l'historique avec pagination et filtres de date (compatible Oracle 11g).
+     */
+    public Page<FabricationHistoriqueDTO> getHistoriqueFabricationsPage(LocalDate dateMin, LocalDate dateMax, int page, int size) {
+        int startRow = page * size;
+        int endRow = startRow + size;
+        
+        List<Fabrication> fabrications;
+        long total;
+        
+        if (dateMin != null && dateMax != null) {
+            fabrications = fabricationRepository.findByDateRangePaginated(dateMin, dateMax, startRow, endRow);
+            total = fabricationRepository.countByDateRange(dateMin, dateMax);
+        } else if (dateMin != null) {
+            fabrications = fabricationRepository.findByDateAfterPaginated(dateMin, startRow, endRow);
+            total = fabricationRepository.countByDateAfter(dateMin);
+        } else if (dateMax != null) {
+            fabrications = fabricationRepository.findByDateBeforePaginated(dateMax, startRow, endRow);
+            total = fabricationRepository.countByDateBefore(dateMax);
+        } else {
+            fabrications = fabricationRepository.findAllOrderByDateDescPaginated(startRow, endRow);
+            total = fabricationRepository.countAll();
+        }
+        
+        List<FabricationHistoriqueDTO> dtos = fabrications.stream()
+            .map(this::toHistoriqueDTO)
+            .collect(Collectors.toList());
+        
+        return new org.springframework.data.domain.PageImpl<>(dtos, PageRequest.of(page, size), total);
+    }
+
+    /**
+     * Convertit une entité Fabrication en DTO historique.
+     */
+    private FabricationHistoriqueDTO toHistoriqueDTO(Fabrication fab) {
+        FabricationHistoriqueDTO dto = new FabricationHistoriqueDTO();
+        dto.setId(fab.getId());
+        dto.setProduitId(fab.getCible());
+        dto.setStatut(fab.chaineEtat());
+        dto.setEtat(fab.getEtat());
+        
+        if (fab.getDaty() != null) {
+            dto.setDateFabrication(fab.getDaty().atStartOfDay());
+        }
+        
+        if (fab.getCible() != null) {
+            ingredientRepository.findById(fab.getCible()).ifPresent(ing -> {
+                dto.setProduitLibelle(ing.getLibelle());
+                dto.setUnite(ing.getUnite());
+            });
+        } else {
+            dto.setProduitLibelle(fab.getLibelle());
+        }
+        
+        List<FabricationFille> filles = fabricationFilleRepository.findByIdMereWithIngredient(fab.getId());
+        List<FabricationLigneDTO> lignes = filles.stream().map(fille -> {
+            FabricationLigneDTO ligne = new FabricationLigneDTO();
+            ligne.setIngredientId(fille.getIdIngredients());
+            ligne.setQuantiteUtilisee(fille.getQte());
+            ligne.setUnite(fille.getIdUnite());
+            ligne.setIngredientLibelle(fille.getLibelle());
             
-            // Date de fabrication
-            if (fab.getDaty() != null) {
-                dto.setDateFabrication(fab.getDaty().atStartOfDay());
+            if (fille.getIngredient() != null) {
+                ligne.setIngredientLibelle(fille.getIngredient().getLibelle());
+                ligne.setUnite(fille.getIngredient().getUnite());
+                ligne.setType(determineType(fille.getIngredient().getTypeIngredient()));
             }
             
-            // Récupérer le libellé du produit et calculer la quantité à partir des lignes
-            if (fab.getCible() != null) {
-                ingredientRepository.findById(fab.getCible()).ifPresent(ing -> {
-                    dto.setProduitLibelle(ing.getLibelle());
-                    dto.setUnite(ing.getUnite());
-                });
-            } else {
-                dto.setProduitLibelle(fab.getLibelle());
-            }
-            
-            // Récupérer les lignes de fabrication
-            List<FabricationFille> filles = fabricationFilleRepository.findByIdMereWithIngredient(fab.getId());
-            List<FabricationLigneDTO> lignes = filles.stream().map(fille -> {
-                FabricationLigneDTO ligne = new FabricationLigneDTO();
-                ligne.setIngredientId(fille.getIdIngredients());
-                ligne.setQuantiteUtilisee(fille.getQte());
-                ligne.setUnite(fille.getIdUnite());
-                ligne.setIngredientLibelle(fille.getLibelle());
-                
-                if (fille.getIngredient() != null) {
-                    ligne.setIngredientLibelle(fille.getIngredient().getLibelle());
-                    ligne.setUnite(fille.getIngredient().getUnite());
-                    ligne.setType(determineType(fille.getIngredient().getTypeIngredient()));
-                }
-                
-                return ligne;
-            }).collect(Collectors.toList());
-            
-            dto.setLignes(lignes);
-            
-            // Calculer la quantité totale (somme des QTE des lignes ou première ligne)
-            BigDecimal qteTotale = filles.stream()
-                .map(FabricationFille::getQte)
-                .filter(q -> q != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            dto.setQuantite(qteTotale);
-            
-            return dto;
+            return ligne;
         }).collect(Collectors.toList());
+        
+        dto.setLignes(lignes);
+        
+        BigDecimal qteTotale = filles.stream()
+            .map(FabricationFille::getQte)
+            .filter(q -> q != null)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        dto.setQuantite(qteTotale);
+        
+        return dto;
     }
 
     /**

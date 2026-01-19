@@ -14,6 +14,8 @@
 <%@ page import="caisse.Devise" %>
 <%@ page import="annexe.Point" %>
 <%@ page import="faturefournisseur.*" %>
+<%@ page import="prevision.DeviseJson" %>
+<%@ page import="java.util.List" %>
 <%
     try {
         UserEJB u = null;
@@ -41,14 +43,45 @@
         PageInsertMultiple pi = new PageInsertMultiple(mere, fille, request, nombreLigne, u);
         pi.setLien((String) session.getValue("lien"));
 
+        // Récupérer le chemin de base pour le fichier JSON des devises
+        String basePath = application.getRealPath("/");
+        String dateJour = utilitaire.Utilitaire.dateDuJour();
+        
+        // Récupérer TOUTES les devises depuis le JSON
+        List<DeviseJson> toutesDevises = DeviseJson.getAllDevises(basePath);
+        String devisesJson = DeviseJson.getDevisesJsonForJs(basePath);
+        
+        // Construire les tableaux pour la liste déroulante des devises
+        int nbDevises = toutesDevises.size();
+        if(nbDevises == 0) {
+            toutesDevises.add(new DeviseJson("AR", "Ariary", 1.0, "2025-01-01", "2035-12-31"));
+            nbDevises = 1;
+        }
+        
+        String[] libellesDevises = new String[nbDevises];
+        String[] codesDevises = new String[nbDevises];
+        for(int i = 0; i < nbDevises; i++) {
+            DeviseJson dv = toutesDevises.get(i);
+            codesDevises[i] = dv.getCode() + "|" + dv.getDateDebut() + "|" + dv.getDateFin();
+            libellesDevises[i] = dv.getCode() + " (" + dv.getDateDebut() + " au " + dv.getDateFin() + ")";
+        }
+
         Liste[] liste = new Liste[4];
         Point mag = new Point();
         mag.setNomTable("point");
         liste[0] = new Liste("idMagasin",mag,"val","id");
-        Devise d = new Devise();
-        liste[1] = new Liste("idDevise",d,"val","id");
+        // Utiliser la liste des devises JSON
+        liste[1] = new Liste("idDevise", libellesDevises, codesDevises);
 
-        liste[1].setDefaut("AR");
+        // Devise par défaut AR (Ariary)
+        String defautDeviseValue = "AR|2025-01-01|2035-12-31";
+        for(DeviseJson dv : toutesDevises) {
+            if(dv.getCode().equals("AR")) {
+                defautDeviseValue = dv.getCode() + "|" + dv.getDateDebut() + "|" + dv.getDateFin();
+                break;
+            }
+        }
+        liste[1].setDefaut(defautDeviseValue);
         ModePaiement mp = new ModePaiement();
         liste[2] = new Liste("idModePaiement",mp,"val","id");
 
@@ -60,6 +93,7 @@
         pi.getFormu().getChamp("idMagasin").setLibelle("Magasin");
         pi.getFormu().getChamp("designation").setLibelle("D&eacute;signation");
         pi.getFormu().getChamp("idModePaiement").setLibelle("Mode de paiement");
+        pi.getFormu().getChamp("detailAchatMultiple").setLibelle("Date multiple");
 
         pi.getFormu().getChamp("daty").setLibelle("Date");
         pi.getFormu().getChamp("idFournisseur").setLibelle("Fournisseur");
@@ -234,6 +268,46 @@
     </div>
 </div>
 <script>
+    // Données des devises chargées depuis le JSON
+    var devisesData = <%= devisesJson %>;
+    
+    // Fonction pour extraire le code devise depuis la valeur composite "CODE|dateDebut|dateFin"
+    function extractCode(deviseValue) {
+        if (!deviseValue) return 'AR';
+        var parts = deviseValue.split('|');
+        return parts[0];
+    }
+    
+    // Fonction pour extraire les dates depuis la valeur composite
+    function extractDates(deviseValue) {
+        if (!deviseValue || !deviseValue.includes('|')) return null;
+        var parts = deviseValue.split('|');
+        if (parts.length < 3) return null;
+        return { dateDebut: parts[1], dateFin: parts[2] };
+    }
+    
+    // Fonction pour trouver le taux d'une devise selon sa période
+    function getTauxDevise(deviseValue) {
+        var codeDevise = extractCode(deviseValue);
+        var dates = extractDates(deviseValue);
+        
+        for (var i = 0; i < devisesData.length; i++) {
+            var devise = devisesData[i];
+            if (devise.code === codeDevise) {
+                if (dates && devise.dateDebut === dates.dateDebut && devise.dateFin === dates.dateFin) {
+                    return devise.taux;
+                }
+            }
+        }
+        for (var i = 0; i < devisesData.length; i++) {
+            var devise = devisesData[i];
+            if (devise.code === codeDevise) {
+                return devise.taux;
+            }
+        }
+        return 1.0;
+    }
+    
     function calculerMontant(indice,source) {
         var val = 0;
         $('input[id^="qte_"]').each(function() {
@@ -249,34 +323,36 @@
             maximumFractionDigits: 2
         }).format(val));
     }
+    
     function deviseModification() {
-
         var nombreLigne = parseInt($("#nombreLigne").val());
+        var deviseValue = $('#idDevise').val();
+        var codeDevise = extractCode(deviseValue);
+        var taux = getTauxDevise(deviseValue);
+        
+        $("#deviseLibelle").html(codeDevise);
+        
         for(let iL=0;iL<nombreLigne;iL++){
             $(function(){
-                var mapping = {
-                    "AR": {
-                        "table": "ST_INGREDIENTSAUTOACHAT_CPL",
-                    },
-                    "USD": {
-                        "table": "ST_INGREDIENTSAUTOACHAT_USD"
-                    },
-                    "EUR": {
-                        "table": "ST_INGREDIENTSAUTOACHAT_EUR"
-                    }
-                };
-                $("#deviseLibelle").html($('#idDevise').val());
-                var idDevise = $('#idDevise').val();
-                $("#idDevise_"+iL).val(idDevise);
+                // Utiliser la même vue pour toutes les devises
+                // Le taux est géré par le JSON, pas par la vue
+                var tableToUse = "ST_INGREDIENTSAUTOACHAT_CPL";
+                
+                // Passer la valeur complète (CODE|dateDebut|dateFin) pour la validation métier
+                $("#idDevise_"+iL).val(deviseValue);
+                $("#tauxDeChange_"+iL).val(taux);
+                
                 let autocompleteTriggered = false;
                 $("#idProduit_"+iL+"libelle").autocomplete('destroy');
-                $("#tauxDeChange_"+iL).val('');
                 $("#pu_"+iL).val('');
+                
+                // La table est maintenant définie en haut de la boucle
+                
                 $("#idProduit_"+iL+"libelle").autocomplete({
                     source: function(request, response) {
                         $("#idProduit_"+iL).val('');
                         if (autocompleteTriggered) {
-                            fetchAutocomplete(request, response, "null", "id", "null", mapping[idDevise].table, "produits.IngredientsLib", "true","pu;taux;compte;compte");
+                            fetchAutocomplete(request, response, "null", "id", "null", tableToUse, "produits.IngredientsLib", "true","pu;taux;compte;compte");
                         }
                     },
                     select: function(event, ui) {
@@ -284,10 +360,13 @@
                         $("#idProduit_"+iL).val(ui.item.value);
                         $("#idProduit_"+iL).trigger('change');
                         $(this).autocomplete('disable');
-                        var champsDependant = ['pu_'+iL,'tauxDeChange_'+iL,'compte_'+iL,'compte_'+iL+'libelle'];
-                        for(let i=0;i<champsDependant.length;i++){
-                            $('#'+champsDependant[i]).val(ui.item.retour.split(';')[i]);
-                        }
+                        // Retour: pu;taux;compte;comptelibelle (index 0,1,2,3)
+                        // Ne pas écraser le taux (index 1) - garder celui du JSON
+                        var retourParts = ui.item.retour.split(';');
+                        $('#pu_'+iL).val(retourParts[0]);           // pu à index 0
+                        // tauxDeChange reste celui défini par deviseModification() depuis le JSON
+                        $('#compte_'+iL).val(retourParts[2]);        // compte à index 2
+                        $('#compte_'+iL+'libelle').val(retourParts[3]); // comptelibelle à index 3
                         autocompleteTriggered = false;
                         return false;
                     }
@@ -314,6 +393,24 @@
             });
         }
     }
+    
+    // Initialiser au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectDevise = document.querySelector('select[name="idDevise"]');
+        if (selectDevise) {
+            var deviseValue = selectDevise.value;
+            var codeDevise = extractCode(deviseValue);
+            var taux = getTauxDevise(deviseValue);
+            $("#deviseLibelle").html(codeDevise);
+            
+            var nombreLigne = parseInt($("#nombreLigne").val()) || 10;
+            for(var iL=0; iL<nombreLigne; iL++){
+                // Passer la valeur complète (CODE|dateDebut|dateFin) pour la validation métier
+                $("#idDevise_"+iL).val(deviseValue);
+                $("#tauxDeChange_"+iL).val(taux);
+            }
+        }
+    });
 </script>
 <%
 } catch (Exception e) {

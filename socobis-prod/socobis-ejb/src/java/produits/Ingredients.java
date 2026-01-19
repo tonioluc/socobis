@@ -60,7 +60,9 @@ public class Ingredients extends ClassMAPTable {
     String refqualification;
     String idmagasin;
     String parfums;
-
+    int estChangeable;
+    
+    
     public String getParfums() {
         return parfums;
     }
@@ -116,7 +118,7 @@ public class Ingredients extends ClassMAPTable {
     public void setCodebarre(String codebarre) {
         this.codebarre = codebarre;
     }
-
+    
     public String getCollection() {
         return collection;
     }
@@ -202,6 +204,13 @@ public class Ingredients extends ClassMAPTable {
         return bienOuServ;
     }
 
+    public int getEstChangeable() {
+        return estChangeable;
+    }
+
+    public void setEstChangeable(int estChangeable) {
+        this.estChangeable = estChangeable;
+    }
     public void setBienOuServ(String bienOuServ) {
         this.bienOuServ = bienOuServ;
     }

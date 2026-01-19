@@ -9,7 +9,7 @@ import chatbot.AiTabDesc;
 import chatbot.ClassIA;
 import utilitaire.UtilDB;
 import utilitaire.Utilitaire;
-import utils.ConstanteAsync;
+
 @AiTabDesc("La structure de ma table de prévision, si ma question inclu prevu ou n'importe qui parle de prevision, dans ma table de prévision, la colonne 'credit' represente la recette prevu et 'debit' le depense prevu.: ")
 public class PrevisionComplet extends PrevisionCPL implements ClassIA {
     double depenseEcart;

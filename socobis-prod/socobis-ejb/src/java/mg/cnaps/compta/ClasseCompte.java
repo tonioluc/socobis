@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 package mg.cnaps.compta;
-
+import bean.ClassMAPTable;
 import bean.TypeObjet;
 import java.sql.Connection;
 

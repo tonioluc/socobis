@@ -1,4 +1,5 @@
 package fabrication;
+
 import java.sql.Connection;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -19,13 +20,12 @@ import utils.ConstanteProcess;
 import utils.ConstanteSocobis;
 
 public class Of extends ClassMere {
-    String id,lancePar,cible,remarque,libelle,idBc;
-    Date besoin,daty;
+    String id, lancePar, cible, remarque, libelle, idBc;
+    Date besoin, daty;
     String etatLib;
     OfFille[] ofFilles;
 
-    public Of() throws Exception
-    {
+    public Of() throws Exception {
         super.setNomTable("Ofab");
         setLiaisonFille("idMere");
         setNomClasseFille("fabrication.OfFille");
@@ -48,18 +48,20 @@ public class Of extends ClassMere {
         this.preparePk("OF", "getseqofab");
         this.setId(makePK(c));
     }
+
     @Override
     public String getTuppleID() {
         return id;
     }
 
-    public  String getNomClasseFille()
-    {
+    public String getNomClasseFille() {
         return "fabrication.OfFille";
     }
+
     public String getLiaisonFille() {
         return "idMere";
     }
+
     @Override
     public String getAttributIDName() {
         return "id";
@@ -129,12 +131,11 @@ public class Of extends ClassMere {
         this.daty = daty;
     }
 
-    public Recette[] decomposer(Connection c)throws Exception
-    {
-        return decomposer("as_recetteOf",c);
+    public Recette[] decomposer(Connection c) throws Exception {
+        return decomposer("as_recetteOf", c);
     }
-    public Recette[] decomposer(String nT,Connection c)throws Exception
-    {
+
+    public Recette[] decomposer(String nT, Connection c) throws Exception {
         boolean estOuvert = false;
         try {
             if (c == null) {
@@ -144,32 +145,30 @@ public class Of extends ClassMere {
             Ingredients ing = new Ingredients();
             ing.setId(this.getId());
             return ing.decomposerBase(nT, c);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw e;
-        }
-        finally {
-            if(estOuvert==true&&c!=null)c.close();
+        } finally {
+            if (estOuvert == true && c != null)
+                c.close();
         }
     }
 
-    public Recette[] decomposerParNiveau(Connection c)throws Exception
-    {
+    public Recette[] decomposerParNiveau(Connection c) throws Exception {
         Ingredients ing = new Ingredients();
         ing.setId(this.getId());
-        return ing.decomposerParNiveau("AS_RECETTEOFabrication", c," and niveau>1 ");
+        return ing.decomposerParNiveau("AS_RECETTEOFabrication", c, " and niveau>1 ");
     }
-    public void decomposerParNiveauEtInserer(String u,Connection c) throws Exception
-    {
-        OfFille[] lf=(OfFille[]) this.getFille();
-        for(int i=0;i<lf.length;i++)
-            lf[i].decomposerParNiveauEtInserer(u,c);
+
+    public void decomposerParNiveauEtInserer(String u, Connection c) throws Exception {
+        OfFille[] lf = (OfFille[]) this.getFille();
+        for (int i = 0; i < lf.length; i++)
+            lf[i].decomposerParNiveauEtInserer(u, c);
     }
-    public void decomposerParNiveauBasEnHautEtInserer(String u,Connection c) throws Exception
-    {
-        OfFille[] lf=(OfFille[]) this.getFille();
-        for(int i=0;i<lf.length;i++)
-            lf[i].decomposerParNiveaubasEnHautEtInserer(u,c);
+
+    public void decomposerParNiveauBasEnHautEtInserer(String u, Connection c) throws Exception {
+        OfFille[] lf = (OfFille[]) this.getFille();
+        for (int i = 0; i < lf.length; i++)
+            lf[i].decomposerParNiveaubasEnHautEtInserer(u, c);
     }
 
     @Override
@@ -182,9 +181,9 @@ public class Of extends ClassMere {
                 c.setAutoCommit(false);
             }
             super.validerObject(u, c);
-            this.setFille ((OfFille[]) this.getFille(null,c,""));
-            this.decomposerParNiveauEtInserer(u,c);  //Pour ARTISANAT
-            //decomposerParNiveauBasEnHautEtInserer(u, c); // Pour SOCOBIS
+            this.setFille((OfFille[]) this.getFille(null, c, ""));
+            this.decomposerParNiveauEtInserer(u, c); // Pour ARTISANAT
+            // decomposerParNiveauBasEnHautEtInserer(u, c); // Pour SOCOBIS
             c.commit();
             return this;
 
@@ -210,7 +209,7 @@ public class Of extends ClassMere {
                 c.setAutoCommit(false);
             }
             this.setMode("modif");
-            //Mettre controle si besoin
+            // Mettre controle si besoin
             this.setEtat(ConstanteProcess.entame);
             this.updateToTableWithHisto(u, c);
             return this;
@@ -226,6 +225,7 @@ public class Of extends ClassMere {
             }
         }
     }
+
     public Object bloquerObject(String u, Connection c) throws Exception {
         boolean estOuvert = false;
         try {
@@ -235,7 +235,7 @@ public class Of extends ClassMere {
                 c.setAutoCommit(false);
             }
             this.setMode("modif");
-            //Mettre controle si besoin
+            // Mettre controle si besoin
             this.setEtat(ConstanteProcess.bloque);
             this.updateToTableWithHisto(u, c);
             return this;
@@ -251,6 +251,7 @@ public class Of extends ClassMere {
             }
         }
     }
+
     public Object terminerObject(String u, Connection c) throws Exception {
         boolean estOuvert = false;
         try {
@@ -278,23 +279,25 @@ public class Of extends ClassMere {
 
     /**
      * Fonction utilisée pour decomposer plusieurs ligne par niveay
+     * 
      * @param nTRecette
      * @param c
      * @return
      * @throws Exception
      */
-    public Recette[] decomposerParNiveau(String nTRecette,Connection c,String apresW) throws Exception {
+    public Recette[] decomposerParNiveau(String nTRecette, Connection c, String apresW) throws Exception {
         boolean estOuvert = false;
         try {
             if (c == null) {
                 c = new UtilDB().GetConn();
                 estOuvert = true;
             }
-            String req="SELECT\n" +
+            String req = "SELECT\n" +
                     "     ing.pu AS qteAv,\n" +
                     "     CAST(0 AS NUMBER(30,10)) AS qteTotal,\n" +
                     "     ing.unite AS unite,\n" +
-                    "     ing.libelle AS libIngredients,ing.id as idIngredients, ing.typestock, ing.IDUNITE,rec.source,ing.COMPOSE,\n" +
+                    "     ing.libelle AS libIngredients,ing.id as idIngredients, ing.typestock, ing.IDUNITE,rec.source,ing.COMPOSE,\n"
+                    +
                     "     cast((\n" +
                     "         (\n" +
                     "             SELECT\n" +
@@ -311,16 +314,16 @@ public class Of extends ClassMere {
                     "         rec.*,'-' as source,\n" +
                     "         SYS_CONNECT_BY_PATH(quantite, '/') AS path,LEVEL as niveau\n" +
                     "     FROM\n" +
-                    "        "+nTRecette +" rec\n" +
+                    "        " + nTRecette + " rec\n" +
                     "     START WITH\n" +
-                    "         idproduits = '"+this.getId()+"'\n" +
+                    "         idproduits = '" + this.getId() + "'\n" +
                     "     CONNECT BY\n" +
                     "         PRIOR idingredients = idproduits\n" +
                     "         AND PRIOR rec.compose = 1\n" +
                     " ) rec\n" +
                     " JOIN AS_INGREDIENTS_LIB ing\n" +
                     "     ON rec.idingredients = ing.id\n" +
-                    " where ing.compose>0 "+apresW+ "\n" +
+                    " where ing.compose>0 " + apresW + "\n" +
                     " order by niveau asc";
             Recette rec = new Recette();
             rec.setNomTable("recettemontant");
@@ -341,37 +344,42 @@ public class Of extends ClassMere {
                 c = new UtilDB().GetConn();
                 estOuvert = true;
             }
-            OfFille[] liste=(OfFille[]) this.getFille();
-            if(liste==null) liste = (OfFille[]) this.getFille(null, c, "");
+            OfFille[] liste = (OfFille[]) this.getFille();
+            if (liste == null)
+                liste = (OfFille[]) this.getFille(null, c, "");
             for (OfFille f : liste) {
                 f.calculerRevient(c);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw e;
-        }
-        finally {
-            if(estOuvert==true&&c!=null)c.close();
+        } finally {
+            if (estOuvert == true && c != null)
+                c.close();
         }
     }
+
     public String chaineEtat() {
-        if(this.getEtat()==1) return "CREE";
-        if(this.getEtat()==11) return "VALIDEE";
-        if(this.getEtat()==21) return "ENTAME";
-        if(this.getEtat()==31) return "BLOQUE";
-        if(this.getEtat()==41) return "TERMINE";
+        if (this.getEtat() == 1)
+            return "CREE";
+        if (this.getEtat() == 11)
+            return "VALIDEE";
+        if (this.getEtat() == 21)
+            return "ENTAME";
+        if (this.getEtat() == 31)
+            return "BLOQUE";
+        if (this.getEtat() == 41)
+            return "TERMINE";
         return "CREE";
     }
 
-
     @Override
     public String[] getMotCles() {
-        return new String[]{"id","libelle"};
+        return new String[] { "id", "libelle" };
     }
 
     @Override
     public String[] getValMotCles() {
-        return new String[]{"id","libelle"};
+        return new String[] { "id", "libelle" };
     }
 
     public OfFille[] getOfFilles() {
@@ -382,9 +390,9 @@ public class Of extends ClassMere {
         this.ofFilles = ofFilles;
     }
 
-    public FabricationCpl[] getFabrication(String nomTable, Connection c)throws Exception{
+    public FabricationCpl[] getFabrication(String nomTable, Connection c) throws Exception {
         String table = "fabricationCpl";
-        if(nomTable != null){
+        if (nomTable != null) {
             table = nomTable;
         }
         FabricationCpl f = new FabricationCpl();
@@ -394,11 +402,11 @@ public class Of extends ClassMere {
     }
 
     public TransfertStock genererTransfertStock(Connection c) throws Exception {
-        try{
-            Of of  = new Of();
-            of = (Of) of.getById(this.getId(),"ofab",c);
+        try {
+            Of of = new Of();
+            of = (Of) of.getById(this.getId(), "ofab", c);
             TransfertStock ts = new TransfertStock();
-            ts.setDesignation("Transfert de stock pour OF "+this.getId());
+            ts.setDesignation("Transfert de stock pour OF " + this.getId());
             ts.setIdMagasinDepart(of.getLancePar());
             ts.setIdMagasinArrive(of.getCible());
             ts.setIdOf(this.getId());
@@ -406,29 +414,32 @@ public class Of extends ClassMere {
             MvtStockEntreeAvecReste depCtr = new MvtStockEntreeAvecReste();
             depCtr.setNomTable("V_ETATSTOCK_ENTREE");
             depCtr.setIdMagasin(of.getLancePar());
-            MvtStockEntreeAvecReste[] etatStockDepart = (MvtStockEntreeAvecReste[])CGenUtil.rechercher(depCtr, null, null, c, "order by daty desc");
+            MvtStockEntreeAvecReste[] etatStockDepart = (MvtStockEntreeAvecReste[]) CGenUtil.rechercher(depCtr, null,
+                    null, c, "order by daty desc");
             Vector<MvtStockEntreeAvecReste> vect = new Vector<MvtStockEntreeAvecReste>(Arrays.asList(etatStockDepart));
             EtatStock arrCtr = new EtatStock();
             arrCtr.setNomTable("V_ETATSTOCK_ING");
             arrCtr.setIdMagasin(of.getCible());
-            EtatStock[] etatStockArrive = (EtatStock[])CGenUtil.rechercher(arrCtr, null, null, c, "");
+            EtatStock[] etatStockArrive = (EtatStock[]) CGenUtil.rechercher(arrCtr, null, null, c, "");
             List<TransfertStockDetails> details = new ArrayList<TransfertStockDetails>();
             for (int i = 0; i < recettes.length; i++) {
-                if(recettes[i].getTypeStock()!=null){
+                if (recettes[i].getTypeStock() != null) {
                     double reste = 0;
-                    EtatStock stockArrive = (EtatStock) AdminGen.findUnique(etatStockArrive,new String[]{"id"},new String[]{recettes[i].getIdingredients()});
-                    if(stockArrive != null) {
+                    EtatStock stockArrive = (EtatStock) AdminGen.findUnique(etatStockArrive, new String[] { "id" },
+                            new String[] { recettes[i].getIdingredients() });
+                    if (stockArrive != null) {
                         reste = stockArrive.getReste();
                     }
                     double qteATransferer = recettes[i].getQuantite() - reste;
 
                     while (qteATransferer > 0) {
-                        MvtStockEntreeAvecReste stockDepart = (MvtStockEntreeAvecReste) AdminGen.findUnique(vect,new String[]{"idProduit"},new String[]{recettes[i].getIdingredients()});
+                        MvtStockEntreeAvecReste stockDepart = (MvtStockEntreeAvecReste) AdminGen.findUnique(vect,
+                                new String[] { "idProduit" }, new String[] { recettes[i].getIdingredients() });
                         TransfertStockDetails det = new TransfertStockDetails();
                         det.setIdProduit(recettes[i].getIdingredients());
-                        det.setRemarque(recettes[i].getLibIngredients()+" - "+recettes[i].getUnite());
+                        det.setRemarque(recettes[i].getLibIngredients() + " - " + recettes[i].getUnite());
 
-                        if(stockDepart != null && stockDepart.getReste() > 0 ){
+                        if (stockDepart != null && stockDepart.getReste() > 0) {
                             double qteTransferee = qteATransferer;
                             qteTransferee = Math.min(qteATransferer, stockDepart.getReste());
                             stockDepart.setReste(stockDepart.getReste() - qteTransferee);
@@ -438,7 +449,7 @@ public class Of extends ClassMere {
                             det.setPu(stockDepart.getPu());
                             details.add(det);
                             vect.remove(stockDepart);
-                        }else {
+                        } else {
                             det.setQuantite(recettes[i].getQuantite());
                             det.setPu(recettes[i].getPu());
                             details.add(det);
@@ -450,7 +461,7 @@ public class Of extends ClassMere {
             }
             ts.setFille(details.toArray(new TransfertStockDetails[0]));
             return ts;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
@@ -458,11 +469,11 @@ public class Of extends ClassMere {
     }
 
     public TransfertStock genererTransfertStock(String idMagDepart, String idMagArrive, Connection c) throws Exception {
-        try{
-            Of of  = new Of();
-            of = (Of) of.getById(this.getId(),"ofab",c);
+        try {
+            Of of = new Of();
+            of = (Of) of.getById(this.getId(), "ofab", c);
             TransfertStock ts = new TransfertStock();
-            ts.setDesignation("Transfert de stock pour OF "+this.getId());
+            ts.setDesignation("Transfert de stock pour OF " + this.getId());
             ts.setIdMagasinDepart(idMagDepart != null ? idMagDepart : of.getLancePar());
             ts.setIdMagasinArrive(idMagArrive != null ? idMagArrive : of.getCible());
             ts.setIdOf(this.getId());
@@ -470,29 +481,32 @@ public class Of extends ClassMere {
             MvtStockEntreeAvecReste depCtr = new MvtStockEntreeAvecReste();
             depCtr.setNomTable("V_ETATSTOCK_ENTREE");
             depCtr.setIdMagasin(idMagDepart != null ? idMagDepart : of.getLancePar());
-            MvtStockEntreeAvecReste[] etatStockDepart = (MvtStockEntreeAvecReste[])CGenUtil.rechercher(depCtr, null, null, c, "order by daty desc");
+            MvtStockEntreeAvecReste[] etatStockDepart = (MvtStockEntreeAvecReste[]) CGenUtil.rechercher(depCtr, null,
+                    null, c, "order by daty desc");
             Vector<MvtStockEntreeAvecReste> vect = new Vector<MvtStockEntreeAvecReste>(Arrays.asList(etatStockDepart));
             EtatStock arrCtr = new EtatStock();
             arrCtr.setNomTable("V_ETATSTOCK_ING");
             arrCtr.setIdMagasin(idMagArrive != null ? idMagArrive : of.getCible());
-            EtatStock[] etatStockArrive = (EtatStock[])CGenUtil.rechercher(arrCtr, null, null, c, "");
+            EtatStock[] etatStockArrive = (EtatStock[]) CGenUtil.rechercher(arrCtr, null, null, c, "");
             List<TransfertStockDetails> details = new ArrayList<TransfertStockDetails>();
             for (int i = 0; i < recettes.length; i++) {
-                if(recettes[i].getTypeStock()!=null){
+                if (recettes[i].getTypeStock() != null) {
                     double reste = 0;
-                    EtatStock stockArrive = (EtatStock) AdminGen.findUnique(etatStockArrive,new String[]{"id"},new String[]{recettes[i].getIdingredients()});
-                    if(stockArrive != null) {
+                    EtatStock stockArrive = (EtatStock) AdminGen.findUnique(etatStockArrive, new String[] { "id" },
+                            new String[] { recettes[i].getIdingredients() });
+                    if (stockArrive != null) {
                         reste = stockArrive.getReste();
                     }
                     double qteATransferer = recettes[i].getQuantite() - reste;
 
                     while (qteATransferer > 0) {
-                        MvtStockEntreeAvecReste stockDepart = (MvtStockEntreeAvecReste) AdminGen.findUnique(vect,new String[]{"idProduit"},new String[]{recettes[i].getIdingredients()});
+                        MvtStockEntreeAvecReste stockDepart = (MvtStockEntreeAvecReste) AdminGen.findUnique(vect,
+                                new String[] { "idProduit" }, new String[] { recettes[i].getIdingredients() });
                         TransfertStockDetails det = new TransfertStockDetails();
                         det.setIdProduit(recettes[i].getIdingredients());
-                        det.setRemarque(recettes[i].getLibIngredients()+" - "+recettes[i].getUnite());
+                        det.setRemarque(recettes[i].getLibIngredients() + " - " + recettes[i].getUnite());
 
-                        if(stockDepart != null && stockDepart.getReste() > 0 ){
+                        if (stockDepart != null && stockDepart.getReste() > 0) {
                             double qteTransferee = qteATransferer;
                             qteTransferee = Math.min(qteATransferer, stockDepart.getReste());
                             stockDepart.setReste(stockDepart.getReste() - qteTransferee);
@@ -502,7 +516,7 @@ public class Of extends ClassMere {
                             det.setPu(stockDepart.getPu());
                             details.add(det);
                             vect.remove(stockDepart);
-                        }else {
+                        } else {
                             det.setPu(recettes[i].getPu());
                             det.setQuantite(recettes[i].getQuantite());
                             details.add(det);
@@ -514,7 +528,7 @@ public class Of extends ClassMere {
             }
             ts.setFille(details.toArray(new TransfertStockDetails[0]));
             return ts;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
@@ -522,22 +536,26 @@ public class Of extends ClassMere {
     }
 
     @Override
-    public ClassMAPTable createObject(MapUtilisateur u, Connection c)throws Exception{
-        if(u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0){
+    public ClassMAPTable createObject(MapUtilisateur u, Connection c) throws Exception {
+        if (u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0) {
             throw new Exception("Vous n'avez pas le droit de creer un OF!");
         }
-        return super.createObject(u,c);
+        return super.createObject(u, c);
     }
 
     @Override
-    public Object validerObject(MapUtilisateur u, Connection c) throws Exception{
-        if(u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0 && (u.getIdrole().compareTo(ConstanteSocobis.CONTREMAITRE_RANG) != 0)){
+    public Object validerObject(MapUtilisateur u, Connection c) throws Exception {
+        System.out.println(u.getIdrole() + "-" + ConstanteSocobis.CHEFFABR_RANG + "-"
+                + ConstanteSocobis.CONTREMAITRE_RANG + "-" + ConstanteSocobis.DG_RANG);
+        if (u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0
+                && (u.getIdrole().compareTo(ConstanteSocobis.CONTREMAITRE_RANG) != 0)
+                && (u.getIdrole().compareTo(ConstanteSocobis.DG_RANG) != 0)) {
             throw new Exception("Vous n'avez pas le droit de valider un OF!");
         }
-        return super.validerObject(u,c);
+        return super.validerObject(u, c);
     }
 
-    public DemandeTransfert genererDemandeTransfert(String idOf, String idcat, Connection c)throws Exception{
+    public DemandeTransfert genererDemandeTransfert(String idOf, String idcat, Connection c) throws Exception {
         boolean estOuvert = false;
         try {
             if (c == null) {
@@ -545,22 +563,22 @@ public class Of extends ClassMere {
                 estOuvert = true;
             }
             Of ofdata = new Of();
-            ofdata = (Of) ofdata.getById(idOf,"ofab",c);
+            ofdata = (Of) ofdata.getById(idOf, "ofab", c);
             DemandeTransfert dm = new DemandeTransfert();
             dm.setNomTable("demandetransfert");
             dm.setIdMagasinDepart(ofdata.getLancePar());
             dm.setIdMagasinArrive(ofdata.getCible());
             dm.setIdOf(ofdata.getId());
-            dm.setDesignation("Demande de transfert : "+ofdata.getId());
+            dm.setDesignation("Demande de transfert : " + ofdata.getId());
             Vector<DemandeTransfertFille> vect = new Vector<DemandeTransfertFille>();
             Recette[] recettes = ofdata.decomposer(c);
-            for(int i=0;i<recettes.length;i++){
-                if(idcat!=null && !idcat.equalsIgnoreCase(recettes[i].getCategorieingredient())){
+            for (int i = 0; i < recettes.length; i++) {
+                if (idcat != null && !idcat.equalsIgnoreCase(recettes[i].getCategorieingredient())) {
                     continue;
                 }
                 DemandeTransfertFille data = new DemandeTransfertFille();
                 data.setIdProduit(recettes[i].getIdingredients());
-                data.setRemarque(recettes[i].getLibIngredients()+" "+recettes[i].getUnite());
+                data.setRemarque(recettes[i].getLibIngredients() + " " + recettes[i].getUnite());
                 data.setQuantite(recettes[i].getQuantite());
                 vect.add(data);
             }
@@ -569,7 +587,8 @@ public class Of extends ClassMere {
         } catch (Exception e) {
             throw e;
         } finally {
-            if(estOuvert==true&&c!=null)c.close();
+            if (estOuvert == true && c != null)
+                c.close();
         }
     }
 

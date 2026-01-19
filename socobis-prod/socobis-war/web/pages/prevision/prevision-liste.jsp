@@ -11,8 +11,8 @@
         prev.setNomTable("PREVISION_COMPLET_CPL");
         String[] intervalles = {"daty"};
         String[] criteres = {"id", "designation", "daty", "compte"};
-        String[] libEntete = {"id", "daty", "designation", "compte",  "debit", "credit", "effectifDebit", "effectifCredit", "depenseEcart", "recetteEcart"};
-        String[] libEnteteAffiche = {"id","Date", "D&eacute;signation", "Compte", "D&eacute;pense", "Recette", "Dep Effectif", "Rec Effectif", "D&eacute;pense Ecart", "Recette Ecart"};
+        String[] libEntete = {"id", "daty", "designation", "compte", "idDevise", "debit", "credit", "effectifDebit", "effectifCredit", "depenseEcart", "recetteEcart"};
+        String[] libEnteteAffiche = {"id","Date", "D&eacute;signation", "Compte", "Paiment", "D&eacute;pense(Ar)", "Recette(Ar)", "Dep Effectif", "Rec Effectif", "D&eacute;pense Ecart(Ar)", "Recette Ecart(Ar)"};
         PageRecherche pr = new PageRecherche( prev, request, criteres, intervalles, 3, libEntete, libEntete.length );
     
         pr.setTitre("Liste des Pr&eacute;visions");
@@ -44,6 +44,7 @@
 <div class="content-wrapper">
     <section class="content-header">
         <h1><%= pr.getTitre() %></h1>
+        <a href="<%= pr.getLien() %>?but=prevision/tresor/previsionTresor-saisie.jsp" class="btn btn-primary">Voir Tr&eacute;sorerie</a>
     </section>
     <section class="content">
         <form action="<%=pr.getLien()%>?but=<%= pr.getApres() %>" method="post" name="vente" id="vente">

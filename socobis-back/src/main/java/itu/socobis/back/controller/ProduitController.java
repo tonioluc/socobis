@@ -3,6 +3,7 @@ package itu.socobis.back.controller;
 import itu.socobis.back.dto.ProduitDTO;
 import itu.socobis.back.service.IngredientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,26 @@ public class ProduitController {
     @GetMapping
     public ResponseEntity<List<ProduitDTO>> getAllProduits() {
         return ResponseEntity.ok(ingredientService.getAllProduits());
+    }
+
+    /**
+     * GET /api/produits/page - Récupère les produits avec pagination.
+     */
+    @GetMapping("/page")
+    public ResponseEntity<Page<ProduitDTO>> getProduitsPage(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ingredientService.getProduitsPage(search, type, page, size));
+    }
+
+    /**
+     * GET /api/produits/autocomplete - Autocomplete pour recherche de produits.
+     */
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<ProduitDTO>> autocomplete(@RequestParam String q) {
+        return ResponseEntity.ok(ingredientService.autocomplete(q));
     }
 
     /**

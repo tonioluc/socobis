@@ -1,12 +1,12 @@
 package fabrication;
 import java.sql.Connection;
 import java.util.Vector;
-import java.util.List;
-import java.util.HashMap;
-import java.sql.Connection;
 
-import bean.*;
-import stock.*;
+import bean.CGenUtil;
+import stock.MvtStockFilleTheorique;
+
+import java.util.HashMap;
+
 import utilitaire.UtilDB;
 
 public class OffilleEtatGlobal{

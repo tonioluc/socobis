@@ -4,6 +4,9 @@ import itu.socobis.back.dto.ProduitDTO;
 import itu.socobis.back.entity.Ingredient;
 import itu.socobis.back.repository.IngredientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -52,6 +55,28 @@ public class IngredientService {
      */
     public List<ProduitDTO> getAllProduits() {
         return ingredientRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère les produits avec pagination et filtres.
+     */
+    public Page<ProduitDTO> getProduitsPage(String search, String type, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Ingredient> ingredients = ingredientRepository.findWithFilters(search, type, pageable);
+        return ingredients.map(this::toDTO);
+    }
+
+    /**
+     * Autocomplete pour recherche de produits (limité à 10 résultats).
+     */
+    public List<ProduitDTO> autocomplete(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return List.of();
+        }
+        return ingredientRepository.searchByLibelleLimit(search.trim(), 10)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

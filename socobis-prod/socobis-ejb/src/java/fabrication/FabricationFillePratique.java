@@ -1,15 +1,5 @@
 package fabrication;
 
-import bean.AdminGen;
-import bean.CGenUtil;
-import bean.ClassMere;
-import chatbot.ClassIA;
-import produits.Ingredients;
-import produits.Recette;
-import stock.MvtStockFille;
-
-import java.sql.Connection;
-
 public class FabricationFillePratique extends FabricationFille {
     String idoffille;
     double montant;

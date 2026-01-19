@@ -9,6 +9,8 @@ import bean.TypeObjet;
 import bean.ValidationException;
 import historique.MapRoles;
 import historique.MapUtilisateur;
+import historique.MapUtilisateurServiceDirection;
+
 import java.sql.Connection;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -32,59 +34,78 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Local
 public interface UserEJB {
-    public String getLangue() throws  Exception;
-    public void setLangue(String langue) throws  Exception;
-    public Map<String, String> getMapTraduction() throws  Exception;
-    public void setMapTraduction(Map<String, String> mapTraduction) throws  Exception;
-    public String getTraduction(String mot) throws  Exception;
+    public String getLangue() throws Exception;
+
+    public void setLangue(String langue) throws Exception;
+
+    public Map<String, String> getMapTraduction() throws Exception;
+
+    public void setMapTraduction(Map<String, String> mapTraduction) throws Exception;
+
+    public String getTraduction(String mot) throws Exception;
+
     public ActionRole[] getActionRole();
+
     public void setActionRole(ActionRole[] actionRoles);
+
     public Object[] getData(ClassMAPTable e, String req, Connection c) throws Exception;
+
     public String getHome_page();
+
     public void ejbRemove();
+
     public Configuration[] getListeConfig() throws Exception;
+
     public TypeObjet[] getListeDirection() throws Exception;
-    public void setListeDirection(TypeObjet[] listeDirection)throws Exception;
+
+    public void setListeDirection(TypeObjet[] listeDirection) throws Exception;
+
     public String getHomePageUrl() throws Exception;
 
     public CNAPSUser getCnapsUser();
-    
+
     public ValidationException getValidation();
 
     public void setValidation(ValidationException validation);
 
-    public String insertMereLierFilles(ClassMere mere , ClassFille fille , String[] filles , String colonneFille, String colonneMere) throws Exception;
-    
-    public String insertMereLierFilles(ClassMere mere , ClassFille fille , String[] filles , String colonneFille, String colonneMere , Connection c) throws Exception ;
-    
-    public Direction[] findDirection(String idDir, String libelledir, String descdir, String abbrevDir, String idDirecteur) throws Exception ;
+    public String insertMereLierFilles(ClassMere mere, ClassFille fille, String[] filles, String colonneFille,
+            String colonneMere) throws Exception;
 
-    public Direction[] findDirection(String idDir, String libelledir, String descdir, String abbrevDir, String idDirecteur, Connection c) throws Exception;
+    public String insertMereLierFilles(ClassMere mere, ClassFille fille, String[] filles, String colonneFille,
+            String colonneMere, Connection c) throws Exception;
+
+    public Direction[] findDirection(String idDir, String libelledir, String descdir, String abbrevDir,
+            String idDirecteur) throws Exception;
+
+    public Direction[] findDirection(String idDir, String libelledir, String descdir, String abbrevDir,
+            String idDirecteur, Connection c) throws Exception;
 
     public Configuration[] findConfiguration() throws Exception;
-    
-    public Object updateObjectMultiple(ClassMAPTable mere, String colonneMere, ClassMAPTable[] fille, Connection c) throws Exception;
-        
-    public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c) throws Exception;
 
-    public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
+    public Object updateObjectMultiple(ClassMAPTable mere, String colonneMere, ClassMAPTable[] fille, Connection c)
+            throws Exception;
 
-//    public int terminerInterimUtilisateur(String ref) throws Exception;
+    public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
+            String apresWhere, String[] nomColSomme, Connection c) throws Exception;
+
+    public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
+            String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
+
+    // public int terminerInterimUtilisateur(String ref) throws Exception;
 
     public int cloturerObjectMultiple(ClassEtat o, String[] listeIdObjet) throws Exception;
 
     public TypeObjet[] getListeSource() throws Exception;
 
-
-    public void transfererNotification(String idNotification, String idpers, String service, String direction) throws Exception;
-
+    public void transfererNotification(String idNotification, String idpers, String service, String direction)
+            throws Exception;
 
     public void deleteObjetFille(ClassMAPTable o, Connection conn) throws Exception;
 
     public void deleteObjetFille(ClassMAPTable o) throws Exception;
 
-    public ResultatEtSomme getDataPageMaxSansRecap(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
-
+    public ResultatEtSomme getDataPageMaxSansRecap(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
+            String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
 
     public String getMaxId(String table, String[] colonne, String[] listeCritere) throws Exception;
 
@@ -100,13 +121,17 @@ public interface UserEJB {
 
     public int deleteTypeObjet(String nomTable, String id) throws Exception;
 
-
-    public MapUtilisateur[] findUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser, String adruser, String teluser, String idrole) throws Exception;
+    public MapUtilisateur[] findUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser,
+            String adruser, String teluser, String idrole) throws Exception;
 
     public MapRoles[] findRole(String rol);
 
     public MapUtilisateur getUser();
 
+    public MapUtilisateurServiceDirection getU();
+
+    public void setU(MapUtilisateurServiceDirection u);
+    
     public int viserObjectMultiple(ClassEtat o, String[] listeIdObjet) throws Exception;
 
     public int marquerLuMultiple(ClassEtat o, String[] listeIdObjet) throws Exception;
@@ -121,11 +146,13 @@ public interface UserEJB {
 
     public Object finaliser(ClassMAPTable o) throws Exception;
 
-    public String updateUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser, String adruser, String teluser, String idrole) throws Exception;
+    public String updateUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser, String adruser,
+            String teluser, String idrole) throws Exception;
 
     public int deleteUtilisateurs(String refuser) throws Exception;
 
-    public String createUtilisateurs(String loginuser, String pwduser, String nomuser, String adruser, String teluser, String idrole) throws Exception;
+    public String createUtilisateurs(String loginuser, String pwduser, String nomuser, String adruser, String teluser,
+            String idrole) throws Exception;
 
     public int desactiveUtilisateur(String ref) throws Exception;
 
@@ -133,34 +160,42 @@ public interface UserEJB {
 
     public void testLogin(String user, String pass, String interim, String service) throws Exception;
 
-
     public String findHomePageServices(String codeService) throws Exception;
 
+    public String mapperMereFille(ClassMAPTable e, String idMere, String[] idFille, String rem, String montant,
+            String etat) throws Exception;
 
-    public String mapperMereFille(ClassMAPTable e, String idMere, String[] idFille, String rem, String montant, String etat) throws Exception;
-
-    public String mapperMereFille(ClassMAPTable e, String nomTable, String idMere, String[] idFille, String rem, String montant, String etat) throws Exception;
+    public String mapperMereFille(ClassMAPTable e, String nomTable, String idMere, String[] idFille, String rem,
+            String montant, String etat) throws Exception;
 
     public void deleteMereFille(ClassMAPTable e, String idMere, String[] liste_id_fille) throws Exception;
 
-    public void deleteMereFille(ClassMAPTable e, String nomTable, String idMere, String[] liste_id_fille) throws Exception;
+    public void deleteMereFille(ClassMAPTable e, String nomTable, String idMere, String[] liste_id_fille)
+            throws Exception;
 
-    public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c) throws Exception;
+    public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
+            String apresWhere, String[] nomColSomme, Connection c) throws Exception;
 
-    public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
+    public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
+            String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception;
 
-    public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c) throws Exception;
+    public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt,
+            String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c)
+            throws Exception;
 
-    public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp) throws Exception;
+    public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt,
+            String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp)
+            throws Exception;
 
-    public Object[] getData(ClassMAPTable e, String[] colInt, String[] valInt, Connection c, String apresWhere) throws Exception;
+    public Object[] getData(ClassMAPTable e, String[] colInt, String[] valInt, Connection c, String apresWhere)
+            throws Exception;
 
     public Object createObject(ClassMAPTable o) throws Exception;
 
     public Object createObject(ClassMAPTable o, Connection c) throws Exception;
 
     public Object updateObject(ClassMAPTable o) throws Exception;
-    
+
     public Object updateObjectSimple(ClassMAPTable o) throws Exception;
 
     public Object validerObject(ClassMAPTable o) throws Exception;
@@ -181,11 +216,9 @@ public interface UserEJB {
 
     public String getIdDirection();
 
-
     public int testRestriction(String user, String permission, String table, Connection con) throws Exception;
 
     public String[] getAllTable() throws Exception;
-
 
     public int deletePJ(String idDossier, String idPj) throws Exception;
 
@@ -193,36 +226,43 @@ public interface UserEJB {
 
     public int ajouterPJInfo(String info_valeur, String pieces_id, String info_id, String info_ok) throws Exception;
 
-    public int ajouterPJInfo(String info_valeur, String pieces_id, String info_id, String info_ok, Connection con) throws Exception;
+    public int ajouterPJInfo(String info_valeur, String pieces_id, String info_id, String info_ok, Connection con)
+            throws Exception;
 
     public int getMessagesNonLu() throws Exception;
 
     public int getNotificationNonLus() throws Exception;
 
-
     public Object createObjectMultiple(ClassMAPTable[] o) throws Exception;
 
     public Object updateObjectMultiple(ClassMAPTable[] o) throws Exception;
 
-    public void createUploadedPj(String nomtable, String nomprocedure, String libelle, String chemin, String mere) throws Exception;//Upload generaliser
+    public void createUploadedPj(String nomtable, String nomprocedure, String libelle, String chemin, String mere)
+            throws Exception;// Upload generaliser
 
-    public void deleteUploadedPj(String nomtable, String id) throws Exception;//delete d'upload generaliser
+    public void deleteUploadedPj(String nomtable, String id) throws Exception;// delete d'upload generaliser
 
     public void ajoutrestriction(String[] table, String idrole, String idaction, String direction) throws Exception;
 
-    public void ajoutrestriction(String[] val, String idrole, String idaction, String direction, Connection c) throws Exception;
+    public void ajoutrestriction(String[] val, String idrole, String idaction, String direction, Connection c)
+            throws Exception;
 
-    public String envoyerObjectNotification(String objetDeLaNotification, String message, String destinataire, String idobjet, String lien, Connection c) throws Exception;
+    public String envoyerObjectNotification(String objetDeLaNotification, String message, String destinataire,
+            String idobjet, String lien, Connection c) throws Exception;
 
-    public String envoyerObjectNotification(String objetDeLaNotification, String message, String personnel, String destinataire, String idobjet, String lien, Connection c) throws Exception;
+    public String envoyerObjectNotification(String objetDeLaNotification, String message, String personnel,
+            String destinataire, String idobjet, String lien, Connection c) throws Exception;
 
     public String lireNotification(String idnotif) throws Exception;
 
-    public String mapperMereToFilleMetier(ClassMAPTable e, String idMere, String[] idFille, String rem, String montant, String etat) throws Exception;
+    public String mapperMereToFilleMetier(ClassMAPTable e, String idMere, String[] idFille, String rem, String montant,
+            String etat) throws Exception;
 
-    public String mapperMereToFilleMetier(ClassMAPTable e, String nomTable, String idMere, String[] idFille, String rem, String montant, String etat) throws Exception;
+    public String mapperMereToFilleMetier(ClassMAPTable e, String nomTable, String idMere, String[] idFille, String rem,
+            String montant, String etat) throws Exception;
 
-    public void createNotification(java.sql.Date daty, String objetDeLaNotification, String message, String destinataire, String idobjet, String lien, int priorite, MapUtilisateur u) throws Exception;
+    public void createNotification(java.sql.Date daty, String objetDeLaNotification, String message,
+            String destinataire, String idobjet, String lien, int priorite, MapUtilisateur u) throws Exception;
 
     public Object updateObject(ClassMAPTable o, Connection c) throws Exception;
 
@@ -232,15 +272,19 @@ public interface UserEJB {
 
     public void deleteObject(ClassMAPTable o, Connection c) throws Exception;
 
-
     public void lireMessage(String sender, String receiver) throws Exception;
 
-    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c) throws Exception;
+    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
+            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+            Connection c) throws Exception;
 
-    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp) throws Exception;
+    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
+            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+            Connection c, int npp) throws Exception;
 
-    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp, String count) throws Exception;
-
+    public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
+            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+            Connection c, int npp, String count) throws Exception;
 
     public Object annulerObject(ClassMAPTable o) throws Exception;
 
@@ -253,35 +297,38 @@ public interface UserEJB {
     public void annulerVisa(ClassMAPTable o, Connection c) throws Exception;
 
     public Object createObjectMultiple(ClassMAPTable mere, String colonneMere, ClassMAPTable[] fille) throws Exception;
-    
+
     public void createObjectFilleMultiple(String idMere, String colonneMere, ClassMAPTable[] fille) throws Exception;
 
-    public void createUploadedPjService(String iddossier, HashMap<String, String> listeVal, Iterator it, String nomtable, String nomprocedure, String mere) throws Exception;
+    public void createUploadedPjService(String iddossier, HashMap<String, String> listeVal, Iterator it,
+            String nomtable, String nomprocedure, String mere) throws Exception;
 
     public void ajouterMenuUtilisateur(String utilisateur, String menus, String role, String acces) throws Exception;
 
-
     public Object dupliquerObject(ClassMAPTable o, String mapFille, String nomColonneMere) throws Exception;
 
-    public Object dupliquerObject(ClassMAPTable o, String mapFille, String nomColonneMere, Connection c) throws Exception;
-
+    public Object dupliquerObject(ClassMAPTable o, String mapFille, String nomColonneMere, Connection c)
+            throws Exception;
 
     public Object createObject(ClassMAPTable o, String action) throws Exception;
+
     public Object[] createObjectMultiple(ClassMAPTable[] o, Connection c) throws Exception;
 
-    public void createTypeObjetMultiple(String nomTable, String proc, String pref, String[] typ, String[] desc) throws Exception;
+    public void createTypeObjetMultiple(String nomTable, String proc, String pref, String[] typ, String[] desc)
+            throws Exception;
 
-    public String createTypeObjet(String nomTable, String proc, String pref, String typ, String desc, Connection c) throws Exception;
+    public String createTypeObjet(String nomTable, String proc, String pref, String typ, String desc, Connection c)
+            throws Exception;
 
     public Object updateObjectMultiple(ClassMAPTable mere, String colonneMere, ClassMAPTable[] fille) throws Exception;
-    
+
     public HashMap<String, String> getMapAutoComplete();
+
     public void setMapAutoComplete(HashMap<String, String> mapAutoComplete);
-    
-    
+
     public Object[] annulerObjectMultiple(ClassEtat o, String[] listeIdObjet, Connection c) throws Exception;
+
     public Object[] annulerObjectMultiple(ClassEtat o, String[] listeIdObjet) throws Exception;
-    
 
     public Object createObjectValidation(ClassMAPTable o, Connection c) throws Exception;
 
@@ -298,13 +345,18 @@ public interface UserEJB {
 
     public Object[] annulerVisaMultiple(ClassEtat o, String[] listeIdObjet) throws Exception;
 
-    public void validerObjectTous(ClassEtat etat, Connection c)throws Exception;
+    public void validerObjectTous(ClassEtat etat, Connection c) throws Exception;
 
-    public void validerObjectTous(ClassEtat etat)throws Exception;
-    public void changeState(ClassMAPTable o,String acte)throws Exception;
+    public void validerObjectTous(ClassEtat etat) throws Exception;
+
+    public void changeState(ClassMAPTable o, String acte) throws Exception;
+
     public ClassMAPTable[] getDataPage(ClassMAPTable e, String requete, Connection c) throws Exception;
+
     public Object deleteObjectMultiple(ClassMAPTable mere, ClassMAPTable[] fille, Connection c) throws Exception;
+
     public Object deleteObjectMultiple(ClassMAPTable mere, ClassMAPTable[] fille) throws Exception;
+
     public Magasin getMagasin();
 
     /* savePlanRemboursement */

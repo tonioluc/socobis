@@ -14,6 +14,7 @@
 <%@ page import="fabrication.Fabrication" %>
 <%@ page import="vente.As_BondeLivraisonClient" %>
 <%@page import="faturefournisseur.As_BonDeLivraison"%>
+<%@ page import="vente.VenteRetourClient" %>
 <%
     try {
         int taille = 10;
@@ -23,12 +24,18 @@
         String idOf=request.getParameter("idOf");
         String isResidu = request.getParameter("isResidu");
         String idBLF = request.getParameter("idBLF");
+        String idVenteRetour = request.getParameter("idVenteRetour");
 
         MvtStock mvtStock = null;
         if(idBLC!=null && !idBLC.isEmpty()){
             As_BondeLivraisonClient bl = new As_BondeLivraisonClient();
             bl.setId(idBLC);
             mvtStock = bl.genererMvtStock(null);
+        }
+        if (idVenteRetour !=null  && !idVenteRetour.isEmpty()){
+            VenteRetourClient venteRetourClient = new VenteRetourClient();
+            venteRetourClient.setId(idVenteRetour);
+            mvtStock = venteRetourClient.genererMvtStockEntreeSortie(null, typeMvtStock, true);
         }
 
         if(idBLF!=null && !idBLF.isEmpty()){

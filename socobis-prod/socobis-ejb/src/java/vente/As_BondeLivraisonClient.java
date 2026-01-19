@@ -3,18 +3,14 @@ package vente;
 import bean.CGenUtil;
 import bean.ClassMAPTable;
 import bean.ClassMere;
-import constante.ConstanteEtat;
 
 import java.sql.Connection;
 import java.sql.Date;
 import stock.MvtStock;
 import stock.MvtStockFille;
 import utilitaire.Utilitaire;
-import utils.ConstanteEtatStation;
-import utils.ConstanteStation;
 import utilitaire.UtilDB;   
 
-import java.sql.Date;
 import utils.ConstanteSocobis;
 
 public class As_BondeLivraisonClient extends ClassMere{

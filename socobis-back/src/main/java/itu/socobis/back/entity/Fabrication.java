@@ -8,10 +8,24 @@ import java.util.List;
 /**
  * Entité mappant la table FABRICATION.
  * Représente un ordre de fabrication (header).
+ * 
+ * États de fabrication (basé sur le code SOCOBIS existant):
+ * 1 = CRÉÉ (brouillon)
+ * 11 = VALIDÉ
+ * 21 = ENTAMÉ (en cours de production)
+ * 31 = BLOQUÉ
+ * 41 = TERMINÉ
  */
 @Entity
 @Table(name = "FABRICATION")
 public class Fabrication {
+
+    // Constantes d'état basées sur ConstanteProcess SOCOBIS
+    public static final int ETAT_CREE = 1;
+    public static final int ETAT_VALIDE = 11;
+    public static final int ETAT_ENTAME = 21;
+    public static final int ETAT_BLOQUE = 31;
+    public static final int ETAT_TERMINE = 41;
 
     @Id
     @Column(name = "ID", length = 255)
@@ -31,14 +45,14 @@ public class Fabrication {
 
     /**
      * État de la fabrication:
-     * 1 = créée (brouillon)
-     * 5 = validée
-     * 10 = en cours
-     * 15 = terminée
-     * -5 = annulée
+     * 1 = CRÉÉ
+     * 11 = VALIDÉ
+     * 21 = ENTAMÉ
+     * 31 = BLOQUÉ
+     * 41 = TERMINÉ
      */
     @Column(name = "ETAT", nullable = false)
-    private Integer etat = 1;
+    private Integer etat = ETAT_CREE;
 
     @Column(name = "LANCEPAR", length = 255)
     private String lancePar;
@@ -197,5 +211,55 @@ public class Fabrication {
     public void removeLigne(FabricationFille ligne) {
         lignes.remove(ligne);
         ligne.setFabrication(null);
+    }
+
+    /**
+     * Retourne le libellé de l'état courant.
+     * Basé sur la méthode chaineEtat() du code SOCOBIS existant.
+     */
+    public String chaineEtat() {
+        if (etat == null) return "INCONNU";
+        switch (etat) {
+            case ETAT_CREE:
+                return "CRÉÉ";
+            case ETAT_VALIDE:
+                return "VALIDÉ";
+            case ETAT_ENTAME:
+                return "ENTAMÉ";
+            case ETAT_BLOQUE:
+                return "BLOQUÉ";
+            case ETAT_TERMINE:
+                return "TERMINÉ";
+            default:
+                return "INCONNU";
+        }
+    }
+
+    /**
+     * Vérifie si la fabrication est terminée.
+     */
+    public boolean isTermine() {
+        return etat != null && etat == ETAT_TERMINE;
+    }
+
+    /**
+     * Vérifie si la fabrication peut être modifiée (état CRÉÉ).
+     */
+    public boolean isModifiable() {
+        return etat != null && etat == ETAT_CREE;
+    }
+
+    /**
+     * Vérifie si la fabrication peut être entamée (état VALIDÉ).
+     */
+    public boolean canEntamer() {
+        return etat != null && etat == ETAT_VALIDE;
+    }
+
+    /**
+     * Vérifie si la fabrication peut être terminée (état ENTAMÉ).
+     */
+    public boolean canTerminer() {
+        return etat != null && etat == ETAT_ENTAME;
     }
 }

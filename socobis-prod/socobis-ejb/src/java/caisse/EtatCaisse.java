@@ -183,7 +183,7 @@ public class EtatCaisse extends ClassMAPTable{
                     "                       ,MAX(r.DATY) maxDateReport\n" +
                     "                  FROM REPORTCAISSE r\n" +
                     "                  WHERE r.ETAT = 11\n" +
-                    "                    AND r.DATY <= '"+ Utilitaire.datetostring(dateMin) + "'\n" +
+                    "                    AND r.DATY <= TO_DATE('"+ Utilitaire.datetostring(dateMin) + "','DD/MM/YYYY')\n" +
                     "                  GROUP BY  r.IDCAISSE\n" +
                     "              ) rm, (\n" +
                     "                  SELECT  ta.*\n" +
@@ -192,15 +192,15 @@ public class EtatCaisse extends ClassMAPTable{
                     "                           SELECT  MAX(daty) AS daty\n" +
                     "                                ,iddevise\n" +
                     "                           FROM TAUXDECHANGE t\n" +
-                    "                           WHERE daty <= '"+ Utilitaire.datetostring(dateMin) + "'\n" +
+                    "                           WHERE daty <= TO_DATE('"+ Utilitaire.datetostring(dateMin) + "','DD/MM/YYYY')\n" +
                     "                           GROUP BY  iddevise\n" +
                     "                       ) tmax\n" +
                     "                  WHERE ta.daty = tmax.daty\n" +
                     "                    AND ta.iddevise = tmax.iddevise ) t\n" +
                     "         WHERE m.IDDEVISE = t.iddevise(+)\n" +
                     "           AND m.IDCAISSE = rm.idcaisse(+)\n" +
-                    "           AND m.DATY >= '"+ Utilitaire.datetostring(dateMin) + "'\n" +
-                    "           AND m.DATY <= '"+ Utilitaire.datetostring(dateMax) + "'\n" +
+                    "           AND m.DATY >= TO_DATE('"+ Utilitaire.datetostring(dateMin) + "','DD/MM/YYYY')\n" +
+                    "           AND m.DATY <= TO_DATE('"+ Utilitaire.datetostring(dateMax) + "','DD/MM/YYYY')\n" +
                     "         GROUP BY  m.IDCAISSE ) mvt\n" +
                     "        ,(\n" +
                     "    SELECT  m.IDCAISSE\n" +
@@ -212,7 +212,7 @@ public class EtatCaisse extends ClassMAPTable{
                     "                  ,MAX(r.DATY) maxDateReport\n" +
                     "             FROM REPORTCAISSE r\n" +
                     "             WHERE r.ETAT = 11\n" +
-                    "               AND r.DATY <= '"+ Utilitaire.datetostring(dateMin) + "'\n" +
+                    "               AND r.DATY <= TO_DATE('"+ Utilitaire.datetostring(dateMin) + "','DD/MM/YYYY')\n" +
                     "             GROUP BY  r.IDCAISSE\n" +
                     "         ) rm, (\n" +
                     "             SELECT  ta.*\n" +
@@ -221,7 +221,7 @@ public class EtatCaisse extends ClassMAPTable{
                     "                      SELECT  MAX(daty) AS daty\n" +
                     "                           ,iddevise\n" +
                     "                      FROM TAUXDECHANGE t\n" +
-                    "                      WHERE daty <= '"+ Utilitaire.datetostring(dateMin) + "'\n" +
+                    "                      WHERE daty <= TO_DATE('"+ Utilitaire.datetostring(dateMin) + "','DD/MM/YYYY')\n" +
                     "                      GROUP BY  iddevise\n" +
                     "                  ) tmax\n" +
                     "             WHERE ta.daty = tmax.daty\n" +
@@ -229,7 +229,7 @@ public class EtatCaisse extends ClassMAPTable{
                     "    WHERE m.IDDEVISE = t.iddevise(+)\n" +
                     "      AND m.IDCAISSE = rm.idcaisse(+)\n" +
                     "      AND m.DATY >= maxDateReport\n" +
-                    "      AND m.DATY < '" +Utilitaire.datetostring(dateMin)  +"'\n" +
+                    "      AND m.DATY < TO_DATE('" + Utilitaire.datetostring(dateMin)  +"','DD/MM/YYYY')\n" +
                     "    GROUP BY  m.IDCAISSE ) mvtAv\n" +
                     "   ,(\n" +
                     "         SELECT  ta.*\n" +
@@ -238,7 +238,7 @@ public class EtatCaisse extends ClassMAPTable{
                     "                  SELECT  MAX(daty) AS daty\n" +
                     "                       ,iddevise\n" +
                     "                  FROM TAUXDECHANGE t\n" +
-                    "                  WHERE daty <= '" +Utilitaire.datetostring(dateMin)  +"'\n" +
+                    "                  WHERE daty <= TO_DATE('" + Utilitaire.datetostring(dateMin)  +"','DD/MM/YYYY')\n" +
                     "                  GROUP BY  iddevise\n" +
                     "              ) tmax\n" +
                     "         WHERE ta.daty = tmax.daty\n" +

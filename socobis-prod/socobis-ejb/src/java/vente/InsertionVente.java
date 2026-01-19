@@ -22,6 +22,7 @@ public class InsertionVente extends Vente{
     double newMontant;
     double oldTotal;
     String idDetail; // ID de la ligne de détail à changer
+    
 
     public String getIdDetail() {
         return idDetail;
@@ -90,7 +91,7 @@ public class InsertionVente extends Vente{
             // }
             
             String idMagasinAnnulation = this.getIdMagasin();
-            venteOrigComplete.annulerVenteCustom(u, c, idMagasinAnnulation);
+            venteOrigComplete.annulerVenteCustom(u, c, idMagasinAnnulation, this.getOldTotal());
             // insert into VENTE_LIEN_CHANGEMENT
             String sql = "INSERT INTO VENTE_LIEN_CHANGEMENT (ID_ANCIENNE_VENTE, ID_NOUVELLE_VENTE, DATE_CHANGEMENT) VALUES (?, ?, SYSDATE)";
             PreparedStatement ps = c.prepareStatement(sql);
@@ -134,8 +135,9 @@ public class InsertionVente extends Vente{
         }
 
         if ("1".equals(this.getChangerEtPayer())) {
-            this.payerAvecTTC(u, c, this.getNewMontant(), this.getOldTotal());
+            this.payerAvecTTC(u, c, this.getNewMontant());
         }
+        
         return res;
     }
 }

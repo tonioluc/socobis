@@ -113,7 +113,7 @@
 
         //pi.getFormufle().getChampMulitple("remise").setVisible(false);
         //affichage.Champ.setPageAppelComplete(pi.getFormufle().getChampFille("idProduit"),"produits.IngredientVente","id","AS_INGREDIENT_VENTE_LIB","prixunitaire;compte_vente;libelle;idunite","pu;compte;designation;unite");
-        affichage.Champ.setPageAppelCompleteAWhere(pi.getFormufle().getChampFille("idProduit"),"produits.IngredientVente","id","AS_INGREDIENT_VENTE_LIB","prixunitaire;compte_vente;libelle;idunite;idunitelib","pu;compte;designation;unite;uniteLib"," AND 1>2");
+        affichage.Champ.setPageAppelCompleteAWhere(pi.getFormufle().getChampFille("idProduit"),"produits.IngredientVente","id","AS_INGREDIENT_VENTE_LIB","prixunitaire;compte_vente;libelle;idunite;idunitelib","pu;compte;designation;unite;uniteLib"," AND 1<2");
         double tva = 0.0;
         if (request.getParameter("onchanged") != null && request.getParameter("onchanged").equals("true")){
             String idmagasin = request.getParameter("idMagasin");

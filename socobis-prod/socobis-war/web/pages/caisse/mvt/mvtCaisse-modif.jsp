@@ -42,9 +42,11 @@
             pageUpdate.getFormu().getChamp("idTiers").setAutre("readonly");
             pageUpdate.getFormu().getChamp("compte").setAutre("readonly");
             pageUpdate.getFormu().getChamp("idPrevision").setAutre("readonly");
+            pageUpdate.getFormu().getChamp("idOrigine").setAutre("readonly");
             pageUpdate.getFormu().getChamp("idTraite").setAutre("readonly");
             pageUpdate.getFormu().getChamp("idModePaiement").setAutre("readonly");
             pageUpdate.getFormu().getChamp("taux").setAutre("readonly");
+            
         }
 
         pageUpdate.getFormu().getChamp("designation").setLibelle("D&eacute;signation");
@@ -55,6 +57,7 @@
         pageUpdate.getFormu().getChamp("idTiers").setLibelle("Tiers");
         pageUpdate.getFormu().getChamp("compte").setLibelle("Compte");
         pageUpdate.getFormu().getChamp("idPrevision").setLibelle("Prevision");
+        pageUpdate.getFormu().getChamp("idOrigine").setLibelle("Origine");
         pageUpdate.getFormu().getChamp("idTraite").setLibelle("Traite");
         pageUpdate.getFormu().getChamp("idModePaiement").setLibelle("Mode de paiement");
 
@@ -65,9 +68,9 @@
         pageUpdate.getFormu().getChamp("idVirement").setVisible(false);
         pageUpdate.getFormu().getChamp("id").setVisible(false);
         pageUpdate.getFormu().getChamp("idOp").setVisible(false);
-        pageUpdate.getFormu().getChamp("idOrigine").setVisible(false);
+        // pageUpdate.getFormu().getChamp("idOrigine").setVisible(false);
 
-        String[] ordre = {"daty","designation","idCaisse","debit","idDevise","taux","idTiers","compte","idPrevision"};
+        String[] ordre = {"daty","designation","idCaisse","debit","idDevise","taux","idTiers","compte","idPrevision","idOrigine"};
         pageUpdate.getFormu().setOrdre(ordre);
         pageUpdate.getFormu().getChamp("designation").setLibelle("D&eacute;signation");
         pageUpdate.getFormu().getChamp("idDevise").setLibelle("Devise");
@@ -75,7 +78,7 @@
         pageUpdate.getFormu().getChamp("idTiers").setLibelle("Fournisseur");
         pageUpdate.getFormu().getChamp("daty").setLibelle("Date");
         pageUpdate.getFormu().getChamp("idPrevision").setLibelle("Pr&eacute;vision");
-
+        pageUpdate.getFormu().getChamp("idOrigine").setLibelle("Origine");
         pageUpdate.preparerDataFormu();
 %>
 <style>

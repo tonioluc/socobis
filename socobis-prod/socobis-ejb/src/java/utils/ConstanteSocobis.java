@@ -4,11 +4,11 @@ public class ConstanteSocobis {
     public static final String CATEGORIE_MAINDOEUVRE = "CAT002";
     public static final String CATEGORIE_CONSOMMABLE = "CAT0011";
     public static final String CATEGORIE_PRODUIT_FINI = "CAT008";
-    public static final String TYPE_MVT_ENTREE = "TPMVST000001";
     public static final String TYPE_MAG_JIRAMA = "TYPMGJIR000041";
-
+    
+    
+    public static final String TYPE_MVT_ENTREE = "TPMVST000001";
     public static final String TYPE_MVT_SORTIE = "TPMVST000022";
-
     public static double POURC_MN = 0.3; // 30%
     public static double POURC_JF = 2.0; // 200%
     public static double POURC_HD = 1.4; // 140%

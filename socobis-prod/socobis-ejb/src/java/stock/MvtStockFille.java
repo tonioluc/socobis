@@ -9,17 +9,18 @@ import bean.ClassFille;
 import bean.CGenUtil;
 import bean.ClassMAPTable;
 import java.sql.Connection;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import produits.Ingredients;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import utilitaire.UtilDB;
 import utils.ConstanteSocobis;
 import utils.ConstanteStation;
-import vente.As_BondeLivraisonClientFille;
 import vente.As_BondeLivraisonClientFille_Cpl;
 import chatbot.AiColDesc;
 
@@ -380,7 +381,7 @@ public class MvtStockFille extends ClassFille{
             search.setNomTable("V_ETATSTOCK_ING");
         }
         EtatStockParEntree[] retour = (EtatStockParEntree[]) CGenUtil.rechercher(search,null,null, c,"");
-        if (retour.length == 0) {
+        if (retour.length == 0) { 
             throw new Exception("Mouvement Stock Entree avec id produit : " + this.getIdProduit() + " introuvable");
         }
         return retour[0].getReste();

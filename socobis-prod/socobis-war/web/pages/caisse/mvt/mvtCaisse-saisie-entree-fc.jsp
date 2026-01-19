@@ -8,6 +8,8 @@
 <%@ page import="utilitaire.Utilitaire" %>
 <%@ page import="vente.VenteLib" %>
 <%@ page import="bean.TypeObjet" %>
+<%@ page import="prevision.DeviseJson" %>
+<%@ page import="java.util.List" %>
 
 <%
 
@@ -37,20 +39,21 @@
             System.err.println(v);
         }
 
-        affichage.Champ[] liste = new affichage.Champ[1];
+        affichage.Champ[] liste = new affichage.Champ[2];
+        // affichage.Champ[] liste = new affichage.Champ[1];
 //	liste[0] = new Liste("idDevise",new caisse.Devise(),"val","id");
         Caisse c = new Caisse();
-       // liste[0] = new Liste("idCaisse",c,"val","id");
         liste[0] = new Liste("idModePaiement",new TypeObjet("MODEPAIEMENT"),"val","id");
-			
+        liste[1] = new Liste("idDevise", new TypeObjet("DEVISE"), "val" ,"id");
         pageInsert.getFormu().changerEnChamp(liste);
         pageInsert.getFormu().getChamp("designation").setDefaut("Paiement de la facture : "+idOrigine);
         pageInsert.getFormu().getChamp("idCaisse").setVisible(false);
         pageInsert.getFormu().getChamp("idDevise").setLibelle("Devise");
         pageInsert.getFormu().getChamp("daty").setLibelle("Date");
         pageInsert.getFormu().getChamp("idDevise").setDefaut(devise);
-        pageInsert.getFormu().getChamp("idDevise").setAutre("readonly");
+        // pageInsert.getFormu().getChamp("idDevise").setAutre("readonly");
         pageInsert.getFormu().getChamp("taux").setDefaut(tau);
+        pageInsert.getFormu().getChamp("taux").setAutre("readonly");
         pageInsert.getFormu().getChamp("idVirement").setVisible(false);
         pageInsert.getFormu().getChamp("idVenteDetail").setVisible(false);
         pageInsert.getFormu().getChamp("idOp").setVisible(false);
@@ -78,8 +81,15 @@
             pageInsert.getFormu().getChamp("idTiers").setDefaut(v.getTiers());
             pageInsert.getFormu().getChamp("credit").setDefaut(v.getMontantttc()+"");
             pageInsert.getFormu().getChamp("idOrigine").setDefaut(v.getId());
-            pageInsert.getFormu().getChamp("idDevise").setDefaut("AR");
+            // Chercher AR dans les devises JSON
+            for(DeviseJson d : toutesDevises) {
+                if(d.getCode().equals("AR")) {
+                    pageInsert.getFormu().getChamp("idDevise").setDefaut(d.getCode() + "|" + d.getDateDebut() + "|" + d.getDateFin());
+                    break;
+                }
+            }
             pageInsert.getFormu().getChamp("taux").setDefaut(v.getTauxdechange()+"");
+            pageInsert.getFormu().getChamp("taux").setAutre("readonly");
         }
         String classe = "caisse.MvtCaisse";
         String nomTable = "MOUVEMENTCAISSE";
@@ -104,6 +114,79 @@
         </form>
     </div>
 
+<script type="text/javascript">
+    // Données des devises chargées depuis le JSON
+    var devisesData = <%= devisesJson %>;
+    
+    // Fonction pour extraire le code devise depuis la valeur composite "CODE|dateDebut|dateFin"
+    function extractCode(deviseValue) {
+        if (!deviseValue) return 'AR';
+        var parts = deviseValue.split('|');
+        return parts[0];
+    }
+    
+    // Fonction pour extraire les dates depuis la valeur composite
+    function extractDates(deviseValue) {
+        if (!deviseValue || !deviseValue.includes('|')) return null;
+        var parts = deviseValue.split('|');
+        if (parts.length < 3) return null;
+        return { dateDebut: parts[1], dateFin: parts[2] };
+    }
+    
+    // Fonction pour trouver le taux d'une devise selon sa période
+    function getTauxDevise(deviseValue) {
+        var codeDevise = extractCode(deviseValue);
+        var dates = extractDates(deviseValue);
+        
+        for (var i = 0; i < devisesData.length; i++) {
+            var devise = devisesData[i];
+            // Matcher par code ET par dates de période
+            if (devise.code === codeDevise) {
+                if (dates && devise.dateDebut === dates.dateDebut && devise.dateFin === dates.dateFin) {
+                    return devise.taux;
+                }
+            }
+        }
+        
+        // Si pas trouvé avec dates exactes, chercher juste par code
+        for (var i = 0; i < devisesData.length; i++) {
+            var devise = devisesData[i];
+            if (devise.code === codeDevise) {
+                return devise.taux;
+            }
+        }
+        
+        return 1.0; // Taux par défaut
+    }
+    
+    // Mettre à jour le taux quand la devise change
+    function updateTaux() {
+        var selectDevise = document.querySelector('select[name="idDevise"]');
+        var inputTaux = document.querySelector('input[name="taux"]');
+        
+        if (selectDevise && inputTaux) {
+            var deviseValue = selectDevise.value;
+            
+            if (deviseValue) {
+                var taux = getTauxDevise(deviseValue);
+                inputTaux.value = taux;
+            }
+        }
+    }
+    
+    // Attacher les événements une fois le DOM chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectDevise = document.querySelector('select[name="idDevise"]');
+        
+        if (selectDevise) {
+            selectDevise.addEventListener('change', updateTaux);
+        }
+        
+        // Initialiser le taux au chargement
+        updateTaux();
+    });
+</script>
+
 <%
 
     }catch(Exception e){
@@ -112,3 +195,4 @@
     }
 
 %>
+<jsp:include page='../../taux.jsp'/>

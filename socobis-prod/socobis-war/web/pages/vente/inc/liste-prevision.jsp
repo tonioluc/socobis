@@ -11,16 +11,15 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
 <%
-    try{
+    try {
         Vente v = (Vente) request.getAttribute("vente");
-        PrevisionComplet[] previsions = v.getPrevisions("PREVISION_COMPLET_CPLPositif",null);
+        PrevisionComplet[] previsions = v.getPrevisions("PREVISION_COMPLET_CPLPositif", null);
         String[] intervalles = {};
         String[] criteres = {};
         String[] libEntete = {"id","daty", "ecart"};
         PageRecherche pr = new PageRecherche(new PrevisionComplet(), request, criteres, intervalles, 3, libEntete, libEntete.length);
         pr.setUtilisateur((UserEJB) session.getValue("u"));
         pr.setLien((String) session.getValue("lien"));
-
         String[] colSomme = null;
 %>
 

@@ -44,8 +44,15 @@
         pi.getFormu().getChamp("daty").setLibelle("Date");
         pi.getFormu().getChamp("daty").setDefaut(Utilitaire.dateDuJour());
         pi.getFormu().setNbColonne(2);
-        pi.getFormu().getChamp("idBc").setLibelle("Num&eacute;ro de bon de commande : ");
+        //
+        pi.getFormu().getChamp("idBc").setPageAppelComplete("vente.BonDeCommande", "id", "BONDECOMMANDE_CLIENT");
+        if(request.getParameter("idBc") != null && !request.getParameter("idBc").equalsIgnoreCase("")){
+            idBC = request.getParameter("idBc");
+            pi.getFormu().getChamp("idBc").setDefaut(idBC);
+        }        
+        //
         pi.getFormu().getChamp("idBc").setDefaut(idBC);
+        pi.getFormu().getChamp("idBc").setLibelle("Num&eacute;ro de bon de commande : ");
 
         pi.getFormufle().getChamp("idIngredients_0").setLibelle("Produits");
         pi.getFormufle().getChamp("remarque_0").setLibelle("Remarque");

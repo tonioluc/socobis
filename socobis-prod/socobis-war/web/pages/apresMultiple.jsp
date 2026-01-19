@@ -11,6 +11,8 @@
 <%@ page import="java.sql.Date" %>
 <%@ page import="affichage.*" %>
 <%@ page import="facture.tr.Traite" %>
+<%@ page import="vente.VenteRetourClient" %>
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
     <%!
@@ -133,9 +135,16 @@
             if (acte != null && acte.compareToIgnoreCase("insert") == 0) {
                 mere = (ClassMAPTable) (Class.forName(classe).newInstance());
                 fille = (ClassMAPTable) (Class.forName(classefille).newInstance());
+                System.out.println("nbLine : " + nbLine);
                 PageInsertMultiple p = new PageInsertMultiple(mere, fille, request, nbLine, tId);
                 ClassMAPTable cmere = p.getObjectAvecValeur();
                 ClassMAPTable[] cfille = p.getObjectFilleAvecValeur();
+                if (cmere instanceof VenteRetourClient) {
+                    VenteRetourClient vrt = (VenteRetourClient) cmere;
+                    System.out.println("Test controlle retour vente detail");
+                    System.out.println(vrt.getIdVenteDetail());
+                    System.out.println(vrt.getId());
+                }
                 for (int i = 0; i < cfille.length; i++) {
                     cfille[i].setNomTable(nomtable);
                 }
@@ -421,6 +430,5 @@
             return;
         }%>
 </html>
-
 
 

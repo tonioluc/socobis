@@ -74,3 +74,4 @@
     }
 
 %>
+<jsp:include page='../../taux.jsp'/>

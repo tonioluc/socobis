@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, type Produit } from '@/services/api'
 
@@ -10,6 +10,12 @@ const onlyType = ref<'TOUS' | 'PRODUIT_FINI' | 'PRODUIT_INTERMEDIAIRE' | 'MATIER
 const products = ref<Produit[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+// Autocomplete
+const autocompleteResults = ref<Produit[]>([])
+const showAutocomplete = ref(false)
+const autocompleteLoading = ref(false)
+let autocompleteTimeout: ReturnType<typeof setTimeout> | null = null
 
 onMounted(async () => {
   await loadProduits()
@@ -26,6 +32,50 @@ async function loadProduits() {
   } finally {
     loading.value = false
   }
+}
+
+// Watch query pour autocomplete
+watch(query, (newQuery) => {
+  if (autocompleteTimeout) {
+    clearTimeout(autocompleteTimeout)
+  }
+  
+  if (!newQuery || newQuery.trim().length < 2) {
+    autocompleteResults.value = []
+    showAutocomplete.value = false
+    return
+  }
+  
+  // Debounce 300ms
+  autocompleteTimeout = setTimeout(async () => {
+    await searchAutocomplete(newQuery)
+  }, 300)
+})
+
+async function searchAutocomplete(searchQuery: string) {
+  autocompleteLoading.value = true
+  try {
+    autocompleteResults.value = await api.autocomplete(searchQuery)
+    showAutocomplete.value = autocompleteResults.value.length > 0
+  } catch (e) {
+    console.error('Erreur autocomplete:', e)
+    autocompleteResults.value = []
+    showAutocomplete.value = false
+  } finally {
+    autocompleteLoading.value = false
+  }
+}
+
+function selectFromAutocomplete(product: Produit) {
+  query.value = product.libelle
+  showAutocomplete.value = false
+}
+
+function hideAutocomplete() {
+  // Petit délai pour permettre le clic sur un résultat
+  setTimeout(() => {
+    showAutocomplete.value = false
+  }, 200)
 }
 
 const filtered = computed(() => {
@@ -104,9 +154,44 @@ function goManufacture(productId: string) {
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input
               v-model="query"
+              @focus="query.length >= 2 && (showAutocomplete = true)"
+              @blur="hideAutocomplete"
               class="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm outline-none focus:border-slate-400"
               placeholder="Rechercher un produit..."
             />
+            <i v-if="autocompleteLoading" class="fas fa-spinner fa-spin absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            
+            <!-- Dropdown Autocomplete -->
+            <div
+              v-if="showAutocomplete && autocompleteResults.length > 0"
+              class="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+            >
+              <div
+                v-for="result in autocompleteResults"
+                :key="result.id"
+                @mousedown="selectFromAutocomplete(result)"
+                class="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 cursor-pointer"
+              >
+                <div
+                  class="flex h-8 w-8 items-center justify-center rounded-lg"
+                  :class="{
+                    'bg-indigo-50 text-indigo-700': result.type === 'PRODUIT_FINI',
+                    'bg-amber-50 text-amber-700': result.type === 'PRODUIT_INTERMEDIAIRE',
+                    'bg-slate-100 text-slate-700': result.type === 'MATIERE_PREMIERE'
+                  }"
+                >
+                  <i :class="{
+                    'fas fa-cookie-bite': result.type === 'PRODUIT_FINI',
+                    'fas fa-flask': result.type === 'PRODUIT_INTERMEDIAIRE',
+                    'fas fa-seedling': result.type === 'MATIERE_PREMIERE'
+                  }"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-slate-900 truncate">{{ result.libelle }}</div>
+                  <div class="text-xs text-slate-500">{{ formatProductType(result.type) }} • Stock: {{ result.stock }} {{ result.unite }}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <select

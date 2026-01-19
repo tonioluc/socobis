@@ -124,6 +124,44 @@
 %>
 <div class="content-wrapper">
     <h1 align="center">Plan de Paiement</h1>
+    
+    <!-- Section Génération Plan de Paiement Multiple -->
+    <%
+        if(obj.equalsIgnoreCase("FactureFournisseur")) {
+    %>
+    <div class="row" style="margin-bottom: 20px;">
+        <div class="col-md-12" style="padding: 0 30px;">
+            <div class="box">
+                <div class="title-box with-border">
+                    <h1>G&eacute;n&eacute;ration Plan de Paiement Multiple</h1>
+                </div>
+                <div class="box-body">
+                    <form id="formPlanPaiementMultiple" action="<%=pi.getLien()%>?but=facturefournisseur/genererPlanPaiementMultiple.jsp" method="post">
+                        <input type="hidden" name="idFacture" value="<%=request.getParameter("idvt")%>"/>
+                        <input type="hidden" name="bute" value="vente/planPaiement-saisie.jsp&idvt=<%=request.getParameter("idvt")%>&classe=<%=classeButApresPost%>"/>
+                        
+                        <div class="form-group">
+                            <label for="planPaiementStr">Plan de Paiement</label>
+                            <input type="text" class="form-control" id="planPaiementStr" name="planPaiementStr" 
+                                   placeholder="Ex: 07/12/2025:30, 12/12/2025:40, 30/12/2025:30"
+                                   style="width: 100%;" />
+
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 15px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-calendar-plus-o"></i> G&eacute;n&eacute;rer les pr&eacute;visions
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%
+        }
+    %>
+    
     <form  action="<%=pi.getLien()%>?but=apresTarif.jsp" method="post"  data-parsley-validate>
         <%
             out.println(pi.getFormu().getHtmlInsert());

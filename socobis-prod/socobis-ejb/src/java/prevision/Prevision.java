@@ -12,8 +12,6 @@ import java.sql.Connection;
 
 import caisse.MvtCaisse;
 import caisse.ReportCaisse;
-import change.TauxDeChange;
-
 import com.mongodb.util.Util;
 import faturefournisseur.FactureFournisseur;
 import java.sql.Date;
@@ -75,8 +73,23 @@ public class Prevision extends MvtCaisse{
 
     @Override
     public void setIdDevise(String idDevise) throws Exception {
-        this.idDevise = idDevise;
-    } 
+        // Si le format est "CODE|dateDebut|dateFin", extraire seulement le code
+        if (idDevise != null && idDevise.contains("|")) {
+            String[] parts = idDevise.split("\\|");
+            this.idDevise = parts[0]; // Stocker seulement le code
+            // Stocker les dates pour validation ultérieure
+            if (parts.length >= 3) {
+                this.dateDebutDevise = parts[1];
+                this.dateFinDevise = parts[2];
+            }
+        } else {
+            this.idDevise = idDevise;
+        }
+    }
+    
+    // Champs temporaires pour validation
+    private transient String dateDebutDevise;
+    private transient String dateFinDevise; 
     
     public boolean isDepense()
     {
@@ -158,51 +171,42 @@ public class Prevision extends MvtCaisse{
     @Override
     public void controler(Connection c) throws Exception {
         if((this.getCredit()==0&&this.getDebit()==0)) throw new Exception("Montant invalide");
+        
+        // Valider que la date de prévision (extraite de la désignation) est dans la fourchette de la devise
+        if (dateDebutDevise != null && dateFinDevise != null && this.getDesignation() != null) {
+            java.text.SimpleDateFormat sdfISO = new java.text.SimpleDateFormat("yyyy-MM-dd");
+            java.text.SimpleDateFormat sdfFR = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            java.util.Date dateDebut = sdfISO.parse(dateDebutDevise);
+            java.util.Date dateFin = sdfISO.parse(dateFinDevise);
+            
+            // Extraire la date de la désignation (format: "Prevision du DD/MM/YYYY")
+            java.util.Date datePrev = null;
+            String designation = this.getDesignation();
+            if (designation != null && designation.toLowerCase().contains("prevision du ")) {
+                try {
+                    // Extraire la partie date après "prevision du "
+                    String dateStr = designation.substring(designation.toLowerCase().indexOf("prevision du ") + 13).trim();
+                    datePrev = sdfFR.parse(dateStr);
+                } catch (Exception e) {
+                    System.out.println("Impossible d'extraire la date de la désignation: " + designation);
+                }
+            }
+            
+            // Si on n'a pas pu extraire de la désignation, utiliser daty comme fallback
+            if (datePrev == null && this.getDaty() != null) {
+                datePrev = new java.util.Date(this.getDaty().getTime());
+            }
+            
+            if (datePrev != null && (datePrev.before(dateDebut) || datePrev.after(dateFin))) {
+                throw new Exception("La date de la prévision (" + sdfFR.format(datePrev) + ") n'est pas dans la période de validité de la devise " + this.getIdDevise() + " (" + dateDebutDevise + " au " + dateFinDevise + ")");
+            }
+        }
     }
     
-    @Override
+       @Override
     public ClassMAPTable createObject(String u, Connection c) throws Exception{
-        System.out.println("Prevision.createObject: Début de la création de l'objet avec conversion en AR si nécessaire");
-        convertirMontantEnAR(c);    
+        
         return createObjectSF(u, c);
-    }
-
-    // Ajoutez cette méthode simple dans la même classe
-    private void convertirMontantEnAR(Connection c) throws Exception {
-        System.out.println("Méthode convertirMontantEnAR appelée");
-        System.out.println("Devise actuelle : " + this.getIdDevise());
-        // Si la devise n'est pas AR, convertir
-        if (this.getIdDevise() != null && !this.getIdDevise().equals("AR")) {
-            
-            // Récupérer le taux de change avec votre méthode existante
-            double taux = TauxDeChange.getLastTaux(
-                c, 
-                utilitaire.Utilitaire.formatterDaty(this.getDaty()), 
-                this.getIdDevise()
-            );
-            
-            // Sauvegarder le taux utilisé (déjà dans le champ taux)
-            this.setTaux(taux);
-            
-            // Convertir les montants
-            if (this.getDebit() > 0) {
-                double montantOriginal = this.getDebit(); // Conserver mentalement
-                this.setDebit(montantOriginal * taux);
-                // Montant original = montantOriginal en devise this.getIdDevise()
-            }
-            
-            if (this.getCredit() > 0) {
-                double montantOriginal = this.getCredit(); // Conserver mentalement
-                this.setCredit(montantOriginal * taux);
-                // Montant original = montantOriginal en devise this.getIdDevise()
-            }
-            
-            // IMPORTANT : On ne change pas idDevise, on garde la devise d'origine
-            // Les montants sont maintenant en AR mais idDevise montre la devise d'origine
-        } else {
-            // Si c'est déjà en AR, taux = 1
-            this.setTaux(1.0);
-        }
     }
 
     @Override

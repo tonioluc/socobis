@@ -5,14 +5,15 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import bean.CGenUtil;
+import bean.ClassMAPTable;
+import bean.ClassMere;
 import fabrication.Fabrication;
 import fabrication.FabricationFille;
 import fabrication.Of;
 import fabrication.OfFille;
 import produits.Ingredients;
 import produits.Recette;
-import proforma.Proforma;
-import proforma.ProformaDetailsLib;
 import chatbot.ClassIA;
 import chatbot.FilleOcr;
 import chatbot.MereOcr;
@@ -20,10 +21,6 @@ import client.Client;
 import magasin.Magasin;
 import utilitaire.UtilDB;
 import utilitaire.Utilitaire;
-import bean.*;
-import faturefournisseur.As_BonDeCommande;
-import vente.Carton;
-import vente.CartonFille;
 public class BonDeCommande extends ClassMere implements ClassIA {
     private String id;
     private String idClient;

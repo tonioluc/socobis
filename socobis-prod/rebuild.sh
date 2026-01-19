@@ -11,4 +11,4 @@ docker builder prune -f
 docker compose build --no-cache socobis-app
 
 # Redémarrer
-docker compose up socobis-app
+docker compose up -d socobis-app

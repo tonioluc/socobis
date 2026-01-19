@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * DTO pour l'historique de fabrication.
+ * États: 1=CRÉÉ, 11=VALIDÉ, 21=ENTAMÉ, 31=BLOQUÉ, 41=TERMINÉ
  */
 public class FabricationHistoriqueDTO {
 
@@ -15,7 +16,8 @@ public class FabricationHistoriqueDTO {
     private BigDecimal quantite;
     private String unite;
     private LocalDateTime dateFabrication;
-    private String statut;
+    private String statut;       // Libellé de l'état (CRÉÉ, VALIDÉ, etc.)
+    private Integer etat;        // Code numérique de l'état (1, 11, 21, 31, 41)
     private List<FabricationLigneDTO> lignes;
 
     public FabricationHistoriqueDTO() {}
@@ -78,6 +80,13 @@ public class FabricationHistoriqueDTO {
         this.statut = statut;
     }
 
+    public Integer getEtat() {
+        return etat;
+    }
+
+    public void setEtat(Integer etat) {
+        this.etat = etat;
+    }
     public List<FabricationLigneDTO> getLignes() {
         return lignes;
     }

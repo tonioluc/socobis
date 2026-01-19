@@ -1,7 +1,6 @@
 package vente;
 
 import bean.ClassFille;
-import bean.CGenUtil;
 
 import java.sql.Connection;
 import stock.MvtStockFille;

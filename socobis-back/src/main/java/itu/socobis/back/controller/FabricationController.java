@@ -3,10 +3,13 @@ package itu.socobis.back.controller;
 import itu.socobis.back.dto.*;
 import itu.socobis.back.service.FabricationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,11 +21,23 @@ public class FabricationController {
     private FabricationService fabricationService;
 
     /**
-     * GET /api/fabrication/historique - Récupère l'historique des fabrications.
+     * GET /api/fabrication/historique - Récupère l'historique des fabrications (liste complète).
      */
     @GetMapping("/historique")
     public ResponseEntity<List<FabricationHistoriqueDTO>> getHistorique() {
         return ResponseEntity.ok(fabricationService.getHistoriqueFabrications());
+    }
+
+    /**
+     * GET /api/fabrication/historique/page - Récupère l'historique avec pagination et filtres.
+     */
+    @GetMapping("/historique/page")
+    public ResponseEntity<Page<FabricationHistoriqueDTO>> getHistoriquePage(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateMin,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateMax,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(fabricationService.getHistoriqueFabricationsPage(dateMin, dateMax, page, size));
     }
 
     /**
@@ -48,7 +63,23 @@ public class FabricationController {
     }
 
     /**
-     * POST /api/fabrication/executer - Exécute une fabrication.
+     * POST /api/fabrication/creer - Crée une fabrication (état CRÉÉ).
+     */
+    @PostMapping("/creer")
+    public ResponseEntity<?> creer(@RequestBody FabricationRequestDTO request) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.creerFabrication(
+                    request.getProduitId(), 
+                    request.getQuantite()
+            );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/fabrication/executer - Exécute une fabrication (création + terminaison directe).
      */
     @PostMapping("/executer")
     public ResponseEntity<?> executer(@RequestBody FabricationRequestDTO request) {
@@ -57,6 +88,71 @@ public class FabricationController {
                     request.getProduitId(), 
                     request.getQuantite()
             );
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/fabrication/{id}/valider - Valide une fabrication (CRÉÉ -> VALIDÉ).
+     */
+    @PutMapping("/{id}/valider")
+    public ResponseEntity<?> valider(@PathVariable String id) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.validerFabrication(id);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/fabrication/{id}/entamer - Entame une fabrication (VALIDÉ -> ENTAMÉ).
+     */
+    @PutMapping("/{id}/entamer")
+    public ResponseEntity<?> entamer(@PathVariable String id) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.entamerFabrication(id);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/fabrication/{id}/bloquer - Bloque une fabrication (ENTAMÉ -> BLOQUÉ).
+     */
+    @PutMapping("/{id}/bloquer")
+    public ResponseEntity<?> bloquer(@PathVariable String id) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.bloquerFabrication(id);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/fabrication/{id}/debloquer - Débloque une fabrication (BLOQUÉ -> ENTAMÉ).
+     */
+    @PutMapping("/{id}/debloquer")
+    public ResponseEntity<?> debloquer(@PathVariable String id) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.debloquerFabrication(id);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/fabrication/{id}/terminer - Termine une fabrication (ENTAMÉ -> TERMINÉ).
+     */
+    @PutMapping("/{id}/terminer")
+    public ResponseEntity<?> terminer(@PathVariable String id) {
+        try {
+            FabricationHistoriqueDTO result = fabricationService.terminerFabrication(id);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));

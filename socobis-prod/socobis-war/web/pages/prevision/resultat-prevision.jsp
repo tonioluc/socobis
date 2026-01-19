@@ -16,7 +16,7 @@
         String[] intervalles = {};
         String[] criteres = {};
         String[] libEntete = {"daty","soldeInitial", "debit", "credit", "soldeFinale"};
-        String[] libEnteteAffiche = {"Date","Solde initial", "d&eacute;pense", "recette", "Solde final"};
+        String[] libEnteteAffiche = {"Date prev","Solde initial", "d&eacute;pense", "recette", "Solde final"};
         PageRecherche pr = new PageRecherche(new Prevision(), request, criteres, intervalles, 3, libEntete, libEntete.length);
         String moisDefaut=Utilitaire.getMois(Utilitaire.dateDuJour());
         

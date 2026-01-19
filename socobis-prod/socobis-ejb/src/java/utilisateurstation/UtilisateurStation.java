@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilisateursocobis;
+package utilisateurstation;
 
 import bean.CGenUtil;
 import bean.ClassMAPTable;
@@ -12,8 +12,6 @@ import historique.MapUtilisateur;
 import historique.ParamCrypt;
 import historique.ParamCryptUtil;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import mg.cnaps.utilisateur.CNAPSUser;
 import utilisateur.Utilisateur;

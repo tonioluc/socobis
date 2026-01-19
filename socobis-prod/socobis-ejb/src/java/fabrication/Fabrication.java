@@ -6,21 +6,16 @@ import bean.ClassMere;
 import demande.DemandeTransfert;
 import demande.DemandeTransfertFille;
 import fabrication.equipe.EquipeEmpCpl;
-import magasin.Magasin;
-import pertegain.Tiers;
 import produits.Ingredients;
 import produits.Recette;
 import produits.RecetteFab;
 import produits.RecetteLib;
 import rh.QualificationPaie;
 import stock.MvtStockEntreeAvecReste;
-import stock.TransfertStockDetails;
 import utilitaire.UtilDB;
-import utilitaire.Utilitaire;
 import utils.ConstanteProcess;
 import bean.CGenUtil;
 
-import java.io.EOFException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -32,7 +27,6 @@ import stock.MvtStock;
 import stock.MvtStockFille;
 import utils.ConstanteSocobis;
 import utils.ConstanteStation;
-import fabrication.*;
 import bean.ClassMAPTable;
 import historique.MapUtilisateur;
 
@@ -1005,7 +999,7 @@ public class Fabrication extends Of {
 
     @Override
     public Object validerObject(MapUtilisateur u, Connection c) throws Exception {
-        if((u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0) && (u.getIdrole().compareTo(ConstanteSocobis.CONTREMAITRE_RANG) != 0)){
+        if((u.getIdrole().compareTo(ConstanteSocobis.CHEFFABR_RANG) != 0) && (u.getIdrole().compareTo(ConstanteSocobis.CONTREMAITRE_RANG) != 0) && (u.getIdrole().compareTo(ConstanteSocobis.DG_RANG) != 0)){
             throw new Exception("Vous n’avez pas le droit de valider une fabrication");
         }
         return super.validerObject(u, c);

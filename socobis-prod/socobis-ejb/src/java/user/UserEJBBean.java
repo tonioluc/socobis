@@ -44,6 +44,7 @@ import lc.Direction;
 import lc.DirectionUtil;
 import constante.ConstanteEtat;
 import bean.Constante;
+
 import javax.ejb.AccessTimeout;
 import javax.ejb.Stateful;
 import javax.ejb.TransactionAttribute;
@@ -103,29 +104,30 @@ public class UserEJBBean implements UserEJB {
     }
 
     String langue;
-    Map<String,String> mapTraduction;
+    Map<String, String> mapTraduction;
 
 
-    public String getLangue() throws  Exception{
+    public String getLangue() throws Exception {
         return langue;
     }
 
-    public void setLangue(String langue) throws  Exception{
+    public void setLangue(String langue) throws Exception {
         this.langue = langue;
     }
 
-    public Map<String, String> getMapTraduction()throws  Exception {
+    public Map<String, String> getMapTraduction() throws Exception {
         return mapTraduction;
     }
 
-    public void setMapTraduction(Map<String, String> mapTraduction)throws  Exception {
+    public void setMapTraduction(Map<String, String> mapTraduction) throws Exception {
         this.mapTraduction = mapTraduction;
     }
-    public String getTraduction(String mot)throws  Exception{
+
+    public String getTraduction(String mot) throws Exception {
         String result = mot;
-        if (this.getLangue()!=null&& this.getLangue().equalsIgnoreCase("fr")==false){
+        if (this.getLangue() != null && this.getLangue().equalsIgnoreCase("fr") == false) {
             String valeur = this.getMapTraduction().get(mot);
-            if (valeur!=null){
+            if (valeur != null) {
                 result = valeur;
             }
         }
@@ -136,7 +138,7 @@ public class UserEJBBean implements UserEJB {
         return homePageUrl;
     }
 
-    public void setHomePageUrl(String homePageUrl)throws Exception {
+    public void setHomePageUrl(String homePageUrl) throws Exception {
         this.homePageUrl = homePageUrl;
     }
 
@@ -144,7 +146,7 @@ public class UserEJBBean implements UserEJB {
         return listeDirection;
     }
 
-    public void setListeDirection(TypeObjet[] listeDirection)throws Exception {
+    public void setListeDirection(TypeObjet[] listeDirection) throws Exception {
         this.listeDirection = listeDirection;
     }
 
@@ -213,13 +215,13 @@ public class UserEJBBean implements UserEJB {
         this.listeSource = listeSource;
     }
 
-    public String insertMereLierFilles(ClassMere mere , ClassFille fille , String[] filles , String colonneFille, String colonneMere) throws Exception {
+    public String insertMereLierFilles(ClassMere mere, ClassFille fille, String[] filles, String colonneFille, String colonneMere) throws Exception {
         Connection c = null;
         try {
             c = new UtilDB().GetConn();
             c.setAutoCommit(false);
-            String insertMere = insertMereLierFilles(mere, fille , filles, colonneFille , colonneMere , c);
-            
+            String insertMere = insertMereLierFilles(mere, fille, filles, colonneFille, colonneMere, c);
+
             c.commit();
             return insertMere;
         } catch (Exception ex) {
@@ -232,25 +234,25 @@ public class UserEJBBean implements UserEJB {
             }
         }
     }
-    
-    public String insertMereLierFilles(ClassMere mere , ClassFille fille , String[] filles , String colonneFille, String colonneMere,Connection c ) throws Exception{        
-        try{             
-            ClassFille[] listeClassFilles =(ClassFille[])CGenUtil.rechercher(fille, null, null,c," AND ID IN ("+ Utilitaire.tabToString(filles, "'", ",")+")");
+
+    public String insertMereLierFilles(ClassMere mere, ClassFille fille, String[] filles, String colonneFille, String colonneMere, Connection c) throws Exception {
+        try {
+            ClassFille[] listeClassFilles = (ClassFille[]) CGenUtil.rechercher(fille, null, null, c, " AND ID IN (" + Utilitaire.tabToString(filles, "'", ",") + ")");
             mere.setFille(listeClassFilles);
-            mere.createObject(u.getTuppleID(),c);            
-            String valeurMere= CGenUtil.getValeurInsert(mere, colonneMere);                        
-            for(int i=0 ; i<listeClassFilles.length ; i++ ){
+            mere.createObject(u.getTuppleID(), c);
+            String valeurMere = CGenUtil.getValeurInsert(mere, colonneMere);
+            for (int i = 0; i < listeClassFilles.length; i++) {
                 /*if (listeClassFilles[i] instanceof ComptaSousEcriture) {
                     listeClassFilles[i].setValChamp("lettrage", mere.getTuppleID());
                     listeClassFilles[i].updateToTable(c);
                 }*/
-                
-                CGenUtil.setValChamp(listeClassFilles[i],CGenUtil.getField(listeClassFilles[i],colonneFille ), valeurMere);
+
+                CGenUtil.setValChamp(listeClassFilles[i], CGenUtil.getField(listeClassFilles[i], colonneFille), valeurMere);
             }
-            mere.updateToTableWithHisto(u.getTuppleID(),c);
+            mere.updateToTableWithHisto(u.getTuppleID(), c);
             return mere.getTuppleID();
-            
-        }catch (Exception ex) {
+
+        } catch (Exception ex) {
             throw new Exception(ex.getMessage());
         }
     }
@@ -308,7 +310,7 @@ public class UserEJBBean implements UserEJB {
                 c.setAutoCommit(false);
                 in = true;
             }
-            ((ClassMere)mere).deleteFille(fille, this.getUser().getTuppleID(), c);
+            ((ClassMere) mere).deleteFille(fille, this.getUser().getTuppleID(), c);
             ret = mere;
             if (in) {
                 c.commit();
@@ -338,10 +340,10 @@ public class UserEJBBean implements UserEJB {
      * Cette fonction sert à modifier ou à inserer un objet selon l'existance de
      * l'identifiant dans l'objet
      *
-     * @param o classe de mapping
+     * @param o           classe de mapping
      * @param colonneMere attribut correspondant au lien de parent
-     * @param idmere identifiant de l'objet parent
-     * @param c connexion ouverte à la base de données
+     * @param idmere      identifiant de l'objet parent
+     * @param c           connexion ouverte à la base de données
      * @return les objets après modification ou insertion
      * @throws Exception
      */
@@ -369,17 +371,17 @@ public class UserEJBBean implements UserEJB {
      * Tester si le nom d'utilisateur et le mot de passe correspondant à un
      * utilisateur
      *
-     * @param user nom d'utilisateur
-     * @param pass mot de passe non crypté de l'utilisateur
+     * @param user    nom d'utilisateur
+     * @param pass    mot de passe non crypté de l'utilisateur
      * @param interim autorisé interim ou pas
      * @param service service où on essaie de se connecter
      * @return utilisateur correspondant au nom d'utilisateur et mot de passe
      * @throws Exception
      */
-    public MapUtilisateurServiceDirection testeValide(String user, String pass, String interim, String service,Connection c) throws Exception {
+    public MapUtilisateurServiceDirection testeValide(String user, String pass, String interim, String service, Connection c) throws Exception {
         try {
             historique.UtilisateurUtil uI = new UtilisateurUtil(c);
-            return (MapUtilisateurServiceDirection) uI.testeValide(user, pass,c);
+            return (MapUtilisateurServiceDirection) uI.testeValide(user, pass, c);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new Exception(ex.getMessage());
@@ -391,14 +393,14 @@ public class UserEJBBean implements UserEJB {
      * d'élèments de la page fixé au nombre configuré si nombre d'élèments
      * donnés invalides
      *
-     * @param e objet de mapping
-     * @param colInt liste des intervalles des intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page actuel
-     * @param apresWhere partie de requête après where
+     * @param e           objet de mapping
+     * @param colInt      liste des intervalles des intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page actuel
+     * @param apresWhere  partie de requête après where
      * @param nomColSomme liste des colonnes de somme
-     * @param c connexion ouverte à la base de données Le nombre d'élèment dans
-     * une page n'est pas preciser
+     * @param c           connexion ouverte à la base de données Le nombre d'élèment dans
+     *                    une page n'est pas preciser
      */
     @Override
     public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c) throws Exception {
@@ -409,14 +411,14 @@ public class UserEJBBean implements UserEJB {
      * Cette fonction sert à rechercher une paginée avec nombre d'élèments de la
      * page fixé au nombre configuré si nombre d'élèments donnés invalides
      *
-     * @param e objet de mapping
-     * @param colInt liste des intervalles des intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page actuel
-     * @param apresWhere partie de requête après where
+     * @param e           objet de mapping
+     * @param colInt      liste des intervalles des intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page actuel
+     * @param apresWhere  partie de requête après where
      * @param nomColSomme liste des colonnes de somme
-     * @param c connexion ouverte à la base de données
-     * @param npp : nombre d'élèment dans une page
+     * @param c           connexion ouverte à la base de données
+     * @param npp         : nombre d'élèment dans une page
      */
     @Override
     public ResultatEtSomme getDataPageMax(ClassMAPTable e, String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception {
@@ -486,10 +488,11 @@ public class UserEJBBean implements UserEJB {
 //            throw ex;
 //        }
 //    }
+
     /**
-     * @deprecated les paramètres ne sont pas utilisées dans la fonction
-     * @param o objet de mapping
+     * @param o            objet de mapping
      * @param listeIdObjet liste des id de l'objet
+     * @deprecated les paramètres ne sont pas utilisées dans la fonction
      */
     @Override
     public int cloturerObjectMultiple(ClassEtat o, String[] listeIdObjet) throws Exception {
@@ -532,7 +535,7 @@ public class UserEJBBean implements UserEJB {
     /**
      * Supprimer un objet de mapping
      *
-     * @param o objet de mapping concerné
+     * @param o    objet de mapping concerné
      * @param conn connexion ouverte à la base de données
      */
     @Override
@@ -547,7 +550,7 @@ public class UserEJBBean implements UserEJB {
     /**
      * Supprimer un objet de mapping
      *
-     * @param o objet de mapping concerné
+     * @param o    objet de mapping concerné
      * @param conn connexion ouverte à la base de données
      */
     @Override
@@ -576,20 +579,20 @@ public class UserEJBBean implements UserEJB {
      * configuré si nombre d'élèments donnés invalides, puis les colonnes de
      * sommes ignorées
      *
-     * @param e objet de mapping
-     * @param colInt liste de colonnes d'intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page actuel
-     * @param apresWhere partie de requête après where
+     * @param e           objet de mapping
+     * @param colInt      liste de colonnes d'intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page actuel
+     * @param apresWhere  partie de requête après where
      * @param nomColSomme liste des colonnes de somme
-     * @param c connexion ouverte à la base de données
-     * @param nbPage nombre d'élèment dans une page
+     * @param c           connexion ouverte à la base de données
+     * @param nbPage      nombre d'élèment dans une page
      * @return instance avec les résultas de la recherches
      * @throws Exception
      */
     @Override
     public ResultatEtSomme getDataPageMaxSansRecap(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
-            String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception {
+                                                   String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception {
         e.setMode("select");
         if (ListeColonneTable.getChamp(e, "iduser", c) != null) {
             ClassUser temp = (ClassUser) e;
@@ -602,8 +605,8 @@ public class UserEJBBean implements UserEJB {
     /**
      * Avoir le maximum d'id dans une table avec une critère
      *
-     * @param table table dans la base de donnée
-     * @param colonne colonne pour le critère
+     * @param table        table dans la base de donnée
+     * @param colonne      colonne pour le critère
      * @param listeCritere critère dans la partie where
      * @return id du l'objet avec le maximum en ID
      */
@@ -686,10 +689,10 @@ public class UserEJBBean implements UserEJB {
      * Sert à inserer pour une fonction
      *
      * @param nomTable nom du table dans la base
-     * @param proc procedure pour génerer l'ID
-     * @param pref suffixe de l'ID pour la géneration
-     * @param typ valeur du type
-     * @param desc description du type d'objet
+     * @param proc     procedure pour génerer l'ID
+     * @param pref     suffixe de l'ID pour la géneration
+     * @param typ      valeur du type
+     * @param desc     description du type d'objet
      * @return id du type créer
      */
     @Override
@@ -720,9 +723,9 @@ public class UserEJBBean implements UserEJB {
      * Sert à modifier une table de catégorie ou de type simple.
      *
      * @param table nom du table dans la base
-     * @param id identifiant
-     * @param typ valeur de la catégorie
-     * @param desc description détaillée de la catégorie
+     * @param id    identifiant
+     * @param typ   valeur de la catégorie
+     * @param desc  description détaillée de la catégorie
      */
     @Override
     public String updateTypeObjet(String table, String id, String typ, String desc) throws Exception {
@@ -749,11 +752,11 @@ public class UserEJBBean implements UserEJB {
     }
 
     /**
-     * @deprecated rechercher des objets de catégorie ou de type simple
      * @param nomTable nom de la table en base
-     * @param id id de l'objet à rechercher
-     * @param typ valeur de l'objet à rechercher
+     * @param id       id de l'objet à rechercher
+     * @param typ      valeur de l'objet à rechercher
      * @return un tableau de type objet
+     * @deprecated rechercher des objets de catégorie ou de type simple
      */
     @Override
     public TypeObjet[] findTypeObjet(String nomTable, String id, String typ) throws Exception {
@@ -771,8 +774,8 @@ public class UserEJBBean implements UserEJB {
      * l'historique
      *
      * @param nomTable nom de la table en base
-     * @param id id de l'objet à supprimer
-     * @param typ valeur de l'objet à supprimer
+     * @param id       id de l'objet à supprimer
+     * @param typ      valeur de l'objet à supprimer
      */
     @Override
     public int deleteTypeObjet(String nomTable, String id) throws Exception {
@@ -802,18 +805,18 @@ public class UserEJBBean implements UserEJB {
     /**
      * Rechercher des utilisateurs
      *
-     * @param iduser id de l'utilisateur
+     * @param iduser    id de l'utilisateur
      * @param loginuser nom d'utilisateur
-     * @param pwduser mot de passe de l'utilisateur pas encore crypté
-     * @param nomuser nom de l'utilisateur
-     * @param adruser adresse de l'utilisateur
-     * @param teluser telephone de l'utilisateur
-     * @param idrole role associé
+     * @param pwduser   mot de passe de l'utilisateur pas encore crypté
+     * @param nomuser   nom de l'utilisateur
+     * @param adruser   adresse de l'utilisateur
+     * @param teluser   telephone de l'utilisateur
+     * @param idrole    role associé
      * @return liste des utilisateurs
      */
     @Override
     public MapUtilisateur[] findUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser,
-            String adruser, String teluser, String idrole) throws Exception {
+                                             String adruser, String teluser, String idrole) throws Exception {
         try {
             int[] a = {1, 2, 3, 4, 5, 6, 7}; //Donne le numero des champs sur lesquelles on va mettre des criteres
             String[] val = new String[a.length];
@@ -844,9 +847,9 @@ public class UserEJBBean implements UserEJB {
     /**
      * Cette fonction permet de marquer comme lu(etat 2) un objet
      *
-     * @param o de type ClassEtat
+     * @param o            de type ClassEtat
      * @param listeIdObjet liste des Ids des objets à marquer comme lu
-     * @param c connexion ouverte à la base de données
+     * @param c            connexion ouverte à la base de données
      * @return 1 si le fonction fonctionne bien .
      * @throws Exception
      */
@@ -865,7 +868,7 @@ public class UserEJBBean implements UserEJB {
     /**
      * Viser(Valider -> changer état en 11) plusieurs objets en même temps
      *
-     * @param o classeEtat
+     * @param o            classeEtat
      * @param listeIdObjet liste id des objets à viser
      * @return nombre de ligne modifiée en base
      */
@@ -905,9 +908,9 @@ public class UserEJBBean implements UserEJB {
     /**
      * Viser(Valider -> changer état en 11) plusieurs objets en même temps
      *
-     * @param o classeEtat
+     * @param o            classeEtat
      * @param listeIdObjet liste id des objets à viser
-     * @param c connexion ouverte à la base de données
+     * @param c            connexion ouverte à la base de données
      * @return nombre de ligne modifiée en base
      */
     public int viserObjectMultiple(ClassEtat o, String[] listeIdObjet, Connection c) throws Exception {
@@ -933,7 +936,7 @@ public class UserEJBBean implements UserEJB {
     /**
      * Cette fonction permet de marquer comme lu(etat 2) un objet
      *
-     * @param o de type ClassEtat
+     * @param o            de type ClassEtat
      * @param listeIdObjet liste des Ids des objets à marquer comme lu
      * @return 1 si le fonction fonctionne bien .
      * @throws Exception
@@ -1132,19 +1135,19 @@ public class UserEJBBean implements UserEJB {
     /**
      * Mettre à jour les informations de l'utilisateur
      *
-     * @param iduser id de l'utilisateur
+     * @param iduser    id de l'utilisateur
      * @param loginuser nom d'utilisateur
-     * @param pwduser mot de passe de l'utilisateur pas encore crypté
-     * @param nomuser nom de l'utilisateur
-     * @param adruser adresse de l'utilisateur
-     * @param teluser telephone de l'utilisateur
-     * @param idrole role associé
-     * @param refuser id de l'utilisateur qui fait la modification
+     * @param pwduser   mot de passe de l'utilisateur pas encore crypté
+     * @param nomuser   nom de l'utilisateur
+     * @param adruser   adresse de l'utilisateur
+     * @param teluser   telephone de l'utilisateur
+     * @param idrole    role associé
+     * @param refuser   id de l'utilisateur qui fait la modification
      * @return id de l'utilisateur qui vient d'être modifié
      */
     @Override
     public String updateUtilisateurs(String refuser, String loginuser, String pwduser, String nomuser, String adruser,
-            String teluser, String idrole) throws Exception {
+                                     String teluser, String idrole) throws Exception {
         HistoriqueLocal rl = null;
         try {
             rl = HistoriqueEJBClient.lookupHistoriqueEJBBeanLocal();
@@ -1188,17 +1191,17 @@ public class UserEJBBean implements UserEJB {
      * Créer un utilisateur
      *
      * @param loginuser nom d'utilisateur
-     * @param pwduser mot de passe de l'utilisateur pas encore crypté
-     * @param nomuser nom de l'utilisateur
-     * @param adruser adresse de l'utilisateur
-     * @param teluser telephone de l'utilisateur
-     * @param idrole role associé
-     * @param refuser id de l'utilisateur qui a fait l'insertion
+     * @param pwduser   mot de passe de l'utilisateur pas encore crypté
+     * @param nomuser   nom de l'utilisateur
+     * @param adruser   adresse de l'utilisateur
+     * @param teluser   telephone de l'utilisateur
+     * @param idrole    role associé
+     * @param refuser   id de l'utilisateur qui a fait l'insertion
      * @return id de l'utilisateur qui vient d'être créé
      */
     @Override
     public String createUtilisateurs(String loginuser, String pwduser, String nomuser, String adruser, String teluser,
-            String idrole) throws Exception {
+                                     String idrole) throws Exception {
         HistoriqueLocal rl = null;
         try {
             if (u.getIdrole().compareTo("dg") == 0) {
@@ -1336,8 +1339,8 @@ public class UserEJBBean implements UserEJB {
      * Tester si les credentials sont valides pour accéder à un service et
      * initialiser les valeurs de certains attributs du bean
      *
-     * @param user nom d'utilisateur(identifiant)
-     * @param pass mot de passe non crypté de l'utilisateur
+     * @param user    nom d'utilisateur(identifiant)
+     * @param pass    mot de passe non crypté de l'utilisateur
      * @param interim 1 ou 0 selon interim dispo ou pas
      * @param service service auquel la personne essaie de se connecter
      */
@@ -1349,18 +1352,18 @@ public class UserEJBBean implements UserEJB {
             c = new UtilDB().GetConn();
             c.setAutoCommit(false);
 
-            u = testeValide(user, pass, interim, service,c);
-            if(u.getService() != null && !u.getService().isEmpty()){
+            u = testeValide(user, pass, interim, service, c);
+            if (u.getService() != null && !u.getService().isEmpty()) {
                 Magasin m = new Magasin();
                 m.setNomTable("magasinpoint");
                 m.setId(u.getService());
                 Magasin[] mag = (Magasin[]) CGenUtil.rechercher(new Magasin(), null, null, c, "");
-                if(mag.length>0 && mag != null){
+                if (mag.length > 0 && mag != null) {
                     this.setMagasin(mag[0]);
                 }
             }
             UtilisateurUtil crt = new UtilisateurUtil(c);
-            uVue = crt.testeValide("utilisateurVue", user, pass,c);
+            uVue = crt.testeValide("utilisateurVue", user, pass, c);
             type = u.getIdrole();
             if (type.compareToIgnoreCase(bean.Constante.getIdRoleDirecteur()) == 0) {
                 Direction d[] = findDirection("", "", "", "", String.valueOf(u.getRefuser()), c);
@@ -1375,11 +1378,11 @@ public class UserEJBBean implements UserEJB {
             TypeObjet crd = new TypeObjet();
             crd.setNomTable("LOG_DIRECTION");
             crd.setId(this.getUser().getAdruser());
-            listeDirection = (TypeObjet[]) CGenUtil.rechercher(crd, null, null,c, "");
+            listeDirection = (TypeObjet[]) CGenUtil.rechercher(crd, null, null, c, "");
             this.cnapsUser = (cnp != null) ? cnp[0] : null;
-            this.setHomePageUrl(this.findHomePageServices(u.getIdrole(),c));
+            this.setHomePageUrl(this.findHomePageServices(u.getIdrole(), c));
             u.setPwduser(getAddrIp());
-            MapHistorique histo = new MapHistorique("login", "login", String.valueOf(u.getRefuser()), String.valueOf(u.getRefuser()),c);
+            MapHistorique histo = new MapHistorique("login", "login", String.valueOf(u.getRefuser()), String.valueOf(u.getRefuser()), c);
             histo.setObjet("mg.cnaps.utilisateur.CNAPSUser");
             histo.setAction(histo.getAction() + "-" + getAddrIp());
             histo.insertToTable(c);
@@ -1423,7 +1426,8 @@ public class UserEJBBean implements UserEJB {
             }
         }
     }
-    public String findHomePageServices(String codeService,Connection connection) throws Exception {
+
+    public String findHomePageServices(String codeService, Connection connection) throws Exception {
         try {
             HomePageURL[] hommePageList = (HomePageURL[]) CGenUtil.rechercher(new HomePageURL(), null, null, connection, " and idrole = '" + codeService + "'");
             if (hommePageList != null && hommePageList.length > 0) {
@@ -1441,15 +1445,15 @@ public class UserEJBBean implements UserEJB {
      * {@link bean.UnionIntraTable}
      *
      * @param nomtableMappage nom de table en base à utiliser pour stocker les
-     * liaisons
-     * @param nomProcedure nom de procedure pour génerer les valeurs ID
-     * @param suffixeMap suffixe pour le primary key
-     * @param idMere id de l'objet mère à lier
-     * @param idFille liste des ids à lier à la mère
-     * @param rem remarque sur la liaison
-     * @param montant valeur à mapper avec la liaison
-     * @param etat etat actuel de la liaison
-     * @param c connexion ouverte à la base de données
+     *                        liaisons
+     * @param nomProcedure    nom de procedure pour génerer les valeurs ID
+     * @param suffixeMap      suffixe pour le primary key
+     * @param idMere          id de l'objet mère à lier
+     * @param idFille         liste des ids à lier à la mère
+     * @param rem             remarque sur la liaison
+     * @param montant         valeur à mapper avec la liaison
+     * @param etat            etat actuel de la liaison
+     * @param c               connexion ouverte à la base de données
      * @return null
      * @throws Exception
      */
@@ -1469,20 +1473,20 @@ public class UserEJBBean implements UserEJB {
      * Lier un objet à plusieurs filles à l'aide de la classe de mapping
      * {@link bean.UnionIntraTable}
      *
-     * @param e classe de mapping representant l'objet de liaison(avec nom de
-     * table, procedure et séquence)
-     * @param idMere id de l'objet mère à lier
+     * @param e       classe de mapping representant l'objet de liaison(avec nom de
+     *                table, procedure et séquence)
+     * @param idMere  id de l'objet mère à lier
      * @param idFille liste des ids à lier à la mère
-     * @param rem remarque sur la liaison
+     * @param rem     remarque sur la liaison
      * @param montant valeur à mapper avec la liaison
-     * @param etat etat actuel de la liaison
-     * @param c connexion ouverte à la base de données
+     * @param etat    etat actuel de la liaison
+     * @param c       connexion ouverte à la base de données
      * @return null
      * @throws Exception
      */
     @Override
     public String mapperMereFille(ClassMAPTable e, String idMere, String[] idFille, String rem, String montant,
-            String etat) throws Exception {
+                                  String etat) throws Exception {
         Connection c = null;
         try {
             c = new UtilDB().GetConn();
@@ -1504,20 +1508,20 @@ public class UserEJBBean implements UserEJB {
      * {@link bean.UnionIntraTable} en utilisant le nom de la table pour génerer
      * le PK
      *
-     * @param e pas important
+     * @param e        pas important
      * @param nomTable nom de la table pour stocker les liaisons
-     * @param idMere id de l'objet mère à lier
-     * @param idFille liste des ids à lier à la mère
-     * @param rem remarque sur la liaison
-     * @param montant valeur à mapper avec la liaison
-     * @param etat etat actuel de la liaison
-     * @param c connexion ouverte à la base de données
+     * @param idMere   id de l'objet mère à lier
+     * @param idFille  liste des ids à lier à la mère
+     * @param rem      remarque sur la liaison
+     * @param montant  valeur à mapper avec la liaison
+     * @param etat     etat actuel de la liaison
+     * @param c        connexion ouverte à la base de données
      * @return null
      * @throws Exception
      */
     @Override
     public String mapperMereFille(ClassMAPTable e, String nomTable, String idMere, String[] idFille, String rem,
-            String montant, String etat) throws Exception {
+                                  String montant, String etat) throws Exception {
         Connection c = null;
         try {
             c = new UtilDB().GetConn();
@@ -1539,8 +1543,8 @@ public class UserEJBBean implements UserEJB {
     /**
      * Supprimer la liaison entre un objet et ses filles
      *
-     * @param e classe representant la liaison
-     * @param idMere id de la mère
+     * @param e              classe representant la liaison
+     * @param idMere         id de la mère
      * @param liste_id_fille liste des ids des filles à supprimer
      *
      *
@@ -1566,9 +1570,9 @@ public class UserEJBBean implements UserEJB {
      * Supprimer la liaison entre un objet et ses filles
      *
      * @param nomtableMappage nom de la table stockant les liaisons
-     * @param idMere id de la mère
-     * @param liste_id_fille liste des ids des filles à supprimer
-     * @param c connexion ouverte à la base de données
+     * @param idMere          id de la mère
+     * @param liste_id_fille  liste des ids des filles à supprimer
+     * @param c               connexion ouverte à la base de données
      *
      */
     public void deleteMereFille(String nomtableMappage, String idMere, String[] idFille, Connection c) throws Exception {
@@ -1584,11 +1588,11 @@ public class UserEJBBean implements UserEJB {
     /**
      * Supprimer la liaison entre un objet et ses filles
      *
-     * @param e classe representant la liaison
+     * @param e               classe representant la liaison
      * @param nomtableMappage nom de la table stockant les liaisons
-     * @param idMere id de la mère
-     * @param liste_id_fille liste des ids des filles à supprimer
-     * @param c connexion ouverte à la base de données
+     * @param idMere          id de la mère
+     * @param liste_id_fille  liste des ids des filles à supprimer
+     * @param c               connexion ouverte à la base de données
      *
      */
     @Override
@@ -1614,17 +1618,17 @@ public class UserEJBBean implements UserEJB {
      * Réaliser une recherche paginée(recapitulation y compris) avec le nombre
      * d'élèment par page fixé au nombre donné dans le paramètre global
      *
-     * @param e : objet de mapping
-     * @param colInt liste de colonnes d'intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page à prendre
-     * @param apresWhere filtre SQL après where
+     * @param e           : objet de mapping
+     * @param colInt      liste de colonnes d'intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page à prendre
+     * @param apresWhere  filtre SQL après where
      * @param nomColSomme noms des colonnes à sommer
-     * @param c : connexion ouverte à la base de données
+     * @param c           : connexion ouverte à la base de données
      */
     @Override
     public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
-            String apresWhere, String[] nomColSomme, Connection c) throws Exception {
+                                       String apresWhere, String[] nomColSomme, Connection c) throws Exception {
         return getDataPage(e, colInt, valInt, numPage, apresWhere, nomColSomme, c, 0);
     }
 
@@ -1648,18 +1652,18 @@ public class UserEJBBean implements UserEJB {
     /**
      * Sert à avoir les sommes de colonnes en tant que récapitulation
      *
-     * @param e objet de mapping
-     * @param colInt liste de colonnes d'intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page à prendre
-     * @param apresWhere filtre SQL après where
+     * @param e           objet de mapping
+     * @param colInt      liste de colonnes d'intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page à prendre
+     * @param apresWhere  filtre SQL après where
      * @param nomColSomme noms des colonnes à sommer
-     * @param c connexion ouverte à la base de données
-     * @param npp nombre d'élèments dans une pages
+     * @param c           connexion ouverte à la base de données
+     * @param npp         nombre d'élèments dans une pages
      */
     @Override
     public ResultatEtSomme getDataPage(ClassMAPTable e, String[] colInt, String[] valInt, int numPage,
-            String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception {
+                                       String apresWhere, String[] nomColSomme, Connection c, int npp) throws Exception {
         e.setMode("select");
         e.setUserEJBBean(this);
         if (ListeColonneTable.getChamp(e, "iduser", c) != null) {
@@ -1672,18 +1676,18 @@ public class UserEJBBean implements UserEJB {
      * Cette fonction fait la recherche groupée paginée avec récapitulation avec
      * nombre d'élèment dans une page fixé au valeur de configuration
      *
-     * @param e objet de mapping
-     * @param colInt liste de colonnes d'intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page à prendre
-     * @param apresWhere filtre SQL après where
+     * @param e           objet de mapping
+     * @param colInt      liste de colonnes d'intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page à prendre
+     * @param apresWhere  filtre SQL après where
      * @param nomColSomme noms des colonnes à sommer
-     * @param c connexion ouverte à la base de données
-     * @param ordre requête d'ordre
+     * @param c           connexion ouverte à la base de données
+     * @param ordre       requête d'ordre
      */
     @Override
     public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt,
-            String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c)
+                                             String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c)
             throws Exception {
         e.setMode("select");
         if (ListeColonneTable.getChamp(e, "iduser", c) != null) {
@@ -1695,19 +1699,19 @@ public class UserEJBBean implements UserEJB {
     /**
      * Cette fonction fait la recherche groupée paginée avec récapitulation
      *
-     * @param e objet de mapping
-     * @param colInt liste de colonnes d'intervalles
-     * @param valInt liste des valeurs des colonnes d'intervalle
-     * @param numPage numéro de page à prendre
-     * @param apresWhere filtre SQL après where
+     * @param e           objet de mapping
+     * @param colInt      liste de colonnes d'intervalles
+     * @param valInt      liste des valeurs des colonnes d'intervalle
+     * @param numPage     numéro de page à prendre
+     * @param apresWhere  filtre SQL après where
      * @param nomColSomme noms des colonnes à sommer
-     * @param c connexion ouverte à la base de données
-     * @param ordre requête d'ordre
-     * @param npp nombre d'élèments dans une pages
+     * @param c           connexion ouverte à la base de données
+     * @param ordre       requête d'ordre
+     * @param npp         nombre d'élèments dans une pages
      */
     @Override
     public ResultatEtSomme getDataPageGroupe(ClassMAPTable e, String[] groupe, String[] sommeGroupe, String[] colInt,
-            String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp)
+                                             String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre, Connection c, int npp)
             throws Exception {
         e.setMode("select");
         if (ListeColonneTable.getChamp(e, "iduser", c) != null) {
@@ -1715,10 +1719,11 @@ public class UserEJBBean implements UserEJB {
         }
         return CGenUtil.rechercherPageGroupe(e, groupe, sommeGroupe, colInt, valInt, numPage, apresWhere, nomColSomme, ordre, c, npp);
     }
+
     @Override
     public Object[] getData(ClassMAPTable e, String req, Connection c) throws Exception {
         e.setMode("select");
-        return CGenUtil.rechercher(e,req,c);
+        return CGenUtil.rechercher(e, req, c);
     }
 
     /**
@@ -1731,10 +1736,10 @@ public class UserEJBBean implements UserEJB {
     /**
      * Permet obtenir le resultat de la recherche de objet de mapping filtré
      *
-     * @param e objet de mapping
-     * @param colInt colonnes avec intervalles
-     * @param valInt valeurs des colonnes d'intervalles
-     * @param c: connection
+     * @param e          objet de mapping
+     * @param colInt     colonnes avec intervalles
+     * @param valInt     valeurs des colonnes d'intervalles
+     * @param c:         connection
      * @param apresWhere where statement personalisé
      */
     @Override
@@ -1909,12 +1914,13 @@ public class UserEJBBean implements UserEJB {
 
     /**
      * *
+     *
+     * @param o    objet fille à rejeter
+     * @param mere objet mère à rejeter
+     * @param c    connexion ouverte à la base de données
+     * @throws Exception
      * @deprecated les tests devraient se faire au niveau de ClassEtat Tester la
      * possibilité d'un rejet de la fille selon l'etat actuel de l'objet
-     * @param o objet fille à rejeter
-     * @param mere objet mère à rejeter
-     * @param c connexion ouverte à la base de données
-     * @throws Exception
      */
     public void testRejectEtat(ClassMAPTable o, ClassMAPTable mere, Connection c) throws Exception {
         try {
@@ -1945,9 +1951,9 @@ public class UserEJBBean implements UserEJB {
      * *
      * sert à rejeter un objet de mapping(changer l'etat en rejeté)
      *
-     * @param o objet à rejeter
+     * @param o    objet à rejeter
      * @param mere objet mère de l'objet à rejeter
-     * @param c connexion ouverte à la base de données
+     * @param c    connexion ouverte à la base de données
      * @return Objet apres avoir rejeter
      * @throws Exception
      *
@@ -1974,7 +1980,7 @@ public class UserEJBBean implements UserEJB {
      * *
      * sert à rejeter un objet de mapping(changer l'etat en rejeté)
      *
-     * @param o objet à rejeter
+     * @param o    objet à rejeter
      * @param mere objet mère de l'objet à rejeter
      * @return Objet apres avoir rejeter
      * @throws Exception
@@ -2043,9 +2049,9 @@ public class UserEJBBean implements UserEJB {
             String id = o.getValInsert("id");
             ClassMAPTable cl = (ClassMAPTable) Class.forName(o.getClassName()).newInstance();
             cl.setNomTable(o.getNomTable());
-            ClassMAPTable[] liste = (ClassMAPTable[]) CGenUtil.rechercher(cl, null, null, c, " and "+o.getAttributIDName()+"='"+o.getTuppleID()+"'");
-            if (liste.length == 0 || liste==null) {
-               throw new Exception("Objet non existant dans " + cl.getNomTable());
+            ClassMAPTable[] liste = (ClassMAPTable[]) CGenUtil.rechercher(cl, null, null, c, " and " + o.getAttributIDName() + "='" + o.getTuppleID() + "'");
+            if (liste.length == 0 || liste == null) {
+                throw new Exception("Objet non existant dans " + cl.getNomTable());
             }
             if (o.getClass().getSuperclass().getSimpleName().compareToIgnoreCase("ClassEtat") == 0) {
                 if (Utilitaire.stringToInt(liste[0].getValInsert("etat")) == ConstanteEtat.getEtatAnnuler()) {
@@ -2074,11 +2080,10 @@ public class UserEJBBean implements UserEJB {
         testClotureEtat(o, c);
         try {
             o.setMode("modif");
-            if (o instanceof ClassEtat)
-            {
-               ClassEtat cet=(ClassEtat) o;
-               cet.cloturerObject(this.getUser().getTuppleID(), c);
-              
+            if (o instanceof ClassEtat) {
+                ClassEtat cet = (ClassEtat) o;
+                cet.cloturerObject(this.getUser().getTuppleID(), c);
+
             }
             c.commit();
             return o;
@@ -2103,19 +2108,17 @@ public class UserEJBBean implements UserEJB {
             throw new Exception("ERREUR DE DROIT");
         }
         ContollerPaiement(o, c);
-	 ClassEtat []lo=null;
-	 Object value=o;
+        ClassEtat[] lo = null;
+        Object value = o;
         try {
             o.setMode("modif");
-            if (o instanceof ClassEtat)
-            {
-		  ClassEtat cet=(ClassEtat) o;
-		  lo=(ClassEtat [])CGenUtil.rechercher(cet,null,null,c," and "+o.getAttributIDName()+"='"+o.getTuppleID()+"'");
-		  if(lo!=null || lo.length>0)
-		  {
-		      cet=lo[0];
-		      value=cet.payerObject(this.getUser().getTuppleID(), c);
-		  }
+            if (o instanceof ClassEtat) {
+                ClassEtat cet = (ClassEtat) o;
+                lo = (ClassEtat[]) CGenUtil.rechercher(cet, null, null, c, " and " + o.getAttributIDName() + "='" + o.getTuppleID() + "'");
+                if (lo != null || lo.length > 0) {
+                    cet = lo[0];
+                    value = cet.payerObject(this.getUser().getTuppleID(), c);
+                }
             }
             c.commit();
             return value;
@@ -2435,11 +2438,11 @@ public class UserEJBBean implements UserEJB {
     /**
      * Inserer les informations sur les pièces jointes ajoutées
      *
-     * @param nomTable nom de table gardant les informations
+     * @param nomTable     nom de table gardant les informations
      * @param nomprocedure nom de la procédure pour génerer le primary key
-     * @param libelle libelle de la pièce jointe
-     * @param chemin chemin absolu vers la pièce jointe
-     * @param mere id de l'objet mère de la pièce jointe
+     * @param libelle      libelle de la pièce jointe
+     * @param chemin       chemin absolu vers la pièce jointe
+     * @param mere         id de l'objet mère de la pièce jointe
      */
     @Override
     public void createUploadedPj(String nomtable, String nomprocedure, String libelle, String chemin, String mere)
@@ -2465,7 +2468,7 @@ public class UserEJBBean implements UserEJB {
      * Supprimer un upload
      *
      * @param nomTable nom de la table
-     * @param id id de la pièce jointe
+     * @param id       id de la pièce jointe
      */
     @Override
     public void deleteUploadedPj(String nomtable, String id) throws Exception {
@@ -2495,11 +2498,11 @@ public class UserEJBBean implements UserEJB {
      * Ajouter une restriction pour un role donné sur une action sur différentes
      * tables
      *
-     * @param val liste de table à restreindre
-     * @param idrole id du role concerné
-     * @param idaction id de l'action à restreindre
+     * @param val       liste de table à restreindre
+     * @param idrole    id du role concerné
+     * @param idaction  id de l'action à restreindre
      * @param direction direction où la restriction est valide(si pour toutes
-     * les directions, mettre null)
+     *                  les directions, mettre null)
      * @throws Exception
      */
     @Override
@@ -2521,12 +2524,12 @@ public class UserEJBBean implements UserEJB {
      * Ajouter une restriction pour un role donné sur une action sur différentes
      * tables
      *
-     * @param val liste de table à restreindre
-     * @param idrole id du role concerné
-     * @param idaction id de l'action à restreindre
+     * @param val       liste de table à restreindre
+     * @param idrole    id du role concerné
+     * @param idaction  id de l'action à restreindre
      * @param direction direction où la restriction est valide(si pour toutes
-     * les directions, mettre null)
-     * @param c connexion ouverte à la base de données
+     *                  les directions, mettre null)
+     * @param c         connexion ouverte à la base de données
      * @throws Exception
      */
     @Override
@@ -2549,11 +2552,11 @@ public class UserEJBBean implements UserEJB {
      * @param destinataire
      * @param idobjet
      * @param lien
-     * @param c connexion à la base de donnée
+     * @param c                     connexion à la base de donnée
      */
     @Override
     public String envoyerObjectNotification(String objetDeLaNotification, String message, String destinataire,
-            String idobjet, String lien, Connection c) throws Exception {
+                                            String idobjet, String lien, Connection c) throws Exception {
         int indice = 0;
         try {
             if (c == null) {
@@ -2585,11 +2588,11 @@ public class UserEJBBean implements UserEJB {
      * @param destinataire
      * @param idobjet
      * @param lien
-     * @param c connection
+     * @param c                     connection
      */
     @Override
     public String envoyerObjectNotification(String objetDeLaNotification, String message, String personnel,
-            String destinataire, String idobjet, String lien, Connection c) throws Exception {
+                                            String destinataire, String idobjet, String lien, Connection c) throws Exception {
         int indice = 0;
         try {
             if (c == null) {
@@ -2647,18 +2650,18 @@ public class UserEJBBean implements UserEJB {
     /**
      * Cette fonction permet de creer une notification
      *
-     * @param daty de type Date
+     * @param daty                  de type Date
      * @param objetDeLaNotification de type String
-     * @param message de type String
-     * @param destinataire de type String
-     * @param idobjet d etype String
-     * @param lien de type String
-     * @param priorite de type int
-     * @param u utilisateur qui va recevoir la notification
+     * @param message               de type String
+     * @param destinataire          de type String
+     * @param idobjet               d etype String
+     * @param lien                  de type String
+     * @param priorite              de type int
+     * @param u                     utilisateur qui va recevoir la notification
      */
     @Override
     public void createNotification(Date daty, String objetDeLaNotification, String message, String destinataire,
-            String idobjet, String lien, int priorite, MapUtilisateur u) throws Exception {
+                                   String idobjet, String lien, int priorite, MapUtilisateur u) throws Exception {
         Connection c = null;
         try {
             c = (new UtilDB()).GetConn();
@@ -2767,9 +2770,9 @@ public class UserEJBBean implements UserEJB {
     /**
      * Marquer en lu tous les messages non lus
      *
-     * @param sender id de l'utilisateur qui envoie les messages
+     * @param sender   id de l'utilisateur qui envoie les messages
      * @param receiver id de l'utilisateur qui reçoit les messages
-     * @param c connexion ouverte à la base de données
+     * @param c        connexion ouverte à la base de données
      * @throws Exception
      */
     public void lireMessage(String sender, String receiver, Connection c) throws Exception {
@@ -2791,25 +2794,25 @@ public class UserEJBBean implements UserEJB {
     /**
      * recherche groupée paginée avec une ligne par page avec récapitulation
      *
-     * @param e objet de mapping
-     * @param groupe liste de colonnes de groupages sans somme
+     * @param e           objet de mapping
+     * @param groupe      liste de colonnes de groupages sans somme
      * @param sommeGroupe liste de colonnes avec sommes
-     * @param colInt colonnes d'intervalle de filtre
-     * @param valInt liste des valeurs de colonnes d'intervalle de filtre
-     * @param numPage numéro de page actuel
-     * @param apresWhere requête SQL après where pour le filtre
+     * @param colInt      colonnes d'intervalle de filtre
+     * @param valInt      liste des valeurs de colonnes d'intervalle de filtre
+     * @param numPage     numéro de page actuel
+     * @param apresWhere  requête SQL après where pour le filtre
      * @param nomColSomme liste de colonnes de somme pour la récapitulation
-     * @param ordre requête d'ordre
-     * @param c connexion à la base de données, ouverte implicitement si valeur
-     * null renseignée
+     * @param ordre       requête d'ordre
+     * @param c           connexion à la base de données, ouverte implicitement si valeur
+     *                    null renseignée
      * @return instance avec les resultats de recherche et les valeurs des
      * sommes de récapitulation
      * @throws Exception
      */
     @Override
     public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
-            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
-            Connection c) throws Exception {
+                                                     String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+                                                     Connection c) throws Exception {
         return CGenUtil.rechercherPageGroupeM(e, groupe, sommeGroupe, colInt, valInt, numPage, apresWhere, nomColSomme, ordre, c);
 
     }
@@ -2817,27 +2820,27 @@ public class UserEJBBean implements UserEJB {
     /**
      * recherche groupée paginée avec récapitulation
      *
-     * @param e objet de mapping
-     * @param groupe liste de colonnes de groupages sans somme
+     * @param e           objet de mapping
+     * @param groupe      liste de colonnes de groupages sans somme
      * @param sommeGroupe liste de colonnes avec sommes
-     * @param colInt colonnes d'intervalle de filtre
-     * @param valInt liste des valeurs de colonnes d'intervalle de filtre
-     * @param numPage numéro de page actuel
-     * @param apresWhere requête SQL après where pour le filtre
+     * @param colInt      colonnes d'intervalle de filtre
+     * @param valInt      liste des valeurs de colonnes d'intervalle de filtre
+     * @param numPage     numéro de page actuel
+     * @param apresWhere  requête SQL après where pour le filtre
      * @param nomColSomme liste de colonnes de somme pour la récapitulation
-     * @param ordre requête d'ordre
-     * @param c connexion à la base de données, ouverte implicitement si valeur
-     * null renseignée
-     * @param nppa nombre d'élèment par page, si négatif le nombre d'élèment par
-     * page de la configuration sera pris
+     * @param ordre       requête d'ordre
+     * @param c           connexion à la base de données, ouverte implicitement si valeur
+     *                    null renseignée
+     * @param nppa        nombre d'élèment par page, si négatif le nombre d'élèment par
+     *                    page de la configuration sera pris
      * @return instance avec les resultats de recherche et les valeurs des
      * sommes de récapitulation
      * @throws Exception
      */
     @Override
     public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
-            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
-            Connection c, int npp) throws Exception {
+                                                     String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+                                                     Connection c, int npp) throws Exception {
         return CGenUtil.rechercherPageGroupeM(e, groupe, sommeGroupe, colInt, valInt, numPage, apresWhere, nomColSomme, ordre, c, npp);
     }
 
@@ -2846,8 +2849,8 @@ public class UserEJBBean implements UserEJB {
      */
     @Override
     public ResultatEtSomme getDataPageGroupeMultiple(ClassMAPTable e, String[] groupe, String[] sommeGroupe,
-            String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
-            Connection c, int npp, String count) throws Exception {
+                                                     String[] colInt, String[] valInt, int numPage, String apresWhere, String[] nomColSomme, String ordre,
+                                                     Connection c, int npp, String count) throws Exception {
         return CGenUtil.rechercherPageGroupeM(e, groupe, sommeGroupe, colInt, valInt, numPage, apresWhere, nomColSomme, ordre, c, npp, count);
 
     }
@@ -2940,10 +2943,10 @@ public class UserEJBBean implements UserEJB {
     /**
      * Sert à updater l'etat qui prend comme paramètre
      *
-     * @param e classe mapping
+     * @param e          classe mapping
      * @param valeurEtat valeur de l'etat
-     * @param id identifiant de l'objet à modifier
-     * @param c connexion ouverte à la base de données
+     * @param id         identifiant de l'objet à modifier
+     * @param c          connexion ouverte à la base de données
      */
     @Override
     public void updateEtat(ClassMAPTable e, int valeurEtat, String id, Connection c) throws Exception {
@@ -3010,17 +3013,17 @@ public class UserEJBBean implements UserEJB {
      * Enregistrer une classe mère avec ses fille avec initialisation interne de
      * base de données
      *
-     * @param mere objet mère
+     * @param mere        objet mère
      * @param colonneMere nom de l'attribut dans la classe fille qui correspond
-     * au foreign key vers la mère
-     * @param fille liste des objets filles à enregistrer
+     *                    au foreign key vers la mère
+     * @param fille       liste des objets filles à enregistrer
      * @return l'objet mère après enregistrement
      */
     @Override
     public Object createObjectMultiple(ClassMAPTable mere, String colonneMere, ClassMAPTable[] fille) throws Exception {
         Connection c = null;
         Object ret = null;
-        boolean estMereFille=false;
+        boolean estMereFille = false;
         try {
             c = new UtilDB().GetConn();
             c.setAutoCommit(false);
@@ -3034,10 +3037,11 @@ public class UserEJBBean implements UserEJB {
             }
             Object idmere = createObject(mere, c);
             String id = null;
-            if(idmere!=null){
+            if (idmere != null) {
                 id = ((ClassMAPTable) idmere).getTuppleID();
             }
-            if(estMereFille==false||(estMereFille==true&&(((ClassMere)mere).getLiaisonFille()==null||((ClassMere)mere).getLiaisonFille().compareToIgnoreCase("")==0)))  ret = createObjectMultiple(fille, colonneMere, id, c);
+            if (estMereFille == false || (estMereFille == true && (((ClassMere) mere).getLiaisonFille() == null || ((ClassMere) mere).getLiaisonFille().compareToIgnoreCase("") == 0)))
+                ret = createObjectMultiple(fille, colonneMere, id, c);
 //            if (idmere instanceof RDVVoiture)
 //            {
 //                RDVVoiture voiture = (RDVVoiture) idmere;
@@ -3064,17 +3068,17 @@ public class UserEJBBean implements UserEJB {
     /**
      * Enregistrer une liste de classe fille en liant l'id de la mère
      *
-     * @param o liste des objets filles à enregistrer
+     * @param o           liste des objets filles à enregistrer
      * @param colonneMere nom de l'attribut dans la classe fille qui correspond
-     * au foreign key vers la mère
-     * @param c connexion ouverte à la base de données
-     * @param idmere id de l'objet mère
+     *                    au foreign key vers la mère
+     * @param c           connexion ouverte à la base de données
+     * @param idmere      id de l'objet mère
      * @return les objets filles après enregistrement
      * @throws Exception
      */
     public Object[] createObjectMultiple(ClassMAPTable[] o, String colonneMere, String idmere, Connection c) throws Exception {
         try {
-            Object[] ret = new Object[o.length];  
+            Object[] ret = new Object[o.length];
             for (int i = 0; i < o.length; i++) {
                 o[i].setValChamp(colonneMere, idmere);
                 ret[i] = createObject(o[i], c);
@@ -3094,8 +3098,8 @@ public class UserEJBBean implements UserEJB {
      *
      * @param idMere
      * @param colonneMere nom de l'attribut dans la classe fille qui correspond
-     * au foreign key vers la mère
-     * @param fille liste des objets filles à enregistrer
+     *                    au foreign key vers la mère
+     * @param fille       liste des objets filles à enregistrer
      * @throws Exception
      */
     @Override
@@ -3121,7 +3125,7 @@ public class UserEJBBean implements UserEJB {
 
     @Override
     public void createUploadedPjService(String iddossier, HashMap<String, String> listeVal, Iterator it,
-            String nomtable, String nomprocedure, String mere) throws Exception {
+                                        String nomtable, String nomprocedure, String mere) throws Exception {
         try {
             UploadService.createUploadedPj(iddossier, u.getTuppleID(), listeVal, it, nomtable, nomprocedure, mere);
         } catch (Exception ex) {
@@ -3134,9 +3138,9 @@ public class UserEJBBean implements UserEJB {
      * Cette fonction permet d'ajouter un Menu pour l'utilisateur
      *
      * @param utilisateur ids des utilisateurs concernés splité par des virgules
-     * @param menus ids des menu concernés splité par des virgules
-     * @param role id du role où le menu est accessible
-     * @param acces si accès au menu 1 sinon 0
+     * @param menus       ids des menu concernés splité par des virgules
+     * @param role        id du role où le menu est accessible
+     * @param acces       si accès au menu 1 sinon 0
      */
     @Override
     public void ajouterMenuUtilisateur(String utilisateur, String menus, String role, String acces) throws Exception {
@@ -3200,12 +3204,12 @@ public class UserEJBBean implements UserEJB {
      * Permet de dupliquer un objet avec ses filles en option avec
      * initialisation de base de données interne
      *
-     * @param o l'objet à dupliquer
-     * @param mapFille nom complet(avec package) de la classe fille si existe
-     * sinon ""
+     * @param o              l'objet à dupliquer
+     * @param mapFille       nom complet(avec package) de la classe fille si existe
+     *                       sinon ""
      * @param nomColonneMere nom de l'attribut associé au colonne mère dans la
-     * classe fille
-     * @param c connexion ouverte à la base de donnée
+     *                       classe fille
+     * @param c              connexion ouverte à la base de donnée
      * @return String de l'id de la mère
      */
     @Override
@@ -3231,12 +3235,12 @@ public class UserEJBBean implements UserEJB {
     /**
      * Permet de dupliquer un objet avec ses filles en option
      *
-     * @param o l'objet à dupliquer
-     * @param mapFille nom complet(avec package) de la classe fille si existe
-     * sinon ""
+     * @param o              l'objet à dupliquer
+     * @param mapFille       nom complet(avec package) de la classe fille si existe
+     *                       sinon ""
      * @param nomColonneMere nom de l'attribut associé au colonne mère dans la
-     * classe fille
-     * @param c connexion ouverte à la base de donnée
+     *                       classe fille
+     * @param c              connexion ouverte à la base de donnée
      * @return String de l'id de la mère
      */
     @Override
@@ -3337,10 +3341,10 @@ public class UserEJBBean implements UserEJB {
      * Créer plusieurs objets de catégorie({@link bean.TypeObjet})
      *
      * @param nomTable nom de la table pour stocker la catégorie
-     * @param proc nom de la procédure pour génerer l'ID
-     * @param pref suffixe à utiliser pour génerer l'ID
-     * @param typ valeur de l'objet
-     * @param desc description détaillée
+     * @param proc     nom de la procédure pour génerer l'ID
+     * @param pref     suffixe à utiliser pour génerer l'ID
+     * @param typ      valeur de l'objet
+     * @param desc     description détaillée
      * @return ID de l'objet qui vient d'être créer
      */
     @Override
@@ -3373,11 +3377,11 @@ public class UserEJBBean implements UserEJB {
      * Créer un objet de catégorie({@link bean.TypeObjet})
      *
      * @param nomTable nom de la table pour stocker la catégorie
-     * @param proc nom de la procédure pour génerer l'ID
-     * @param pref suffixe à utiliser pour génerer l'ID
-     * @param typ valeur de l'objet
-     * @param desc description détaillée
-     * @param c connexion ouverte à la base de données
+     * @param proc     nom de la procédure pour génerer l'ID
+     * @param pref     suffixe à utiliser pour génerer l'ID
+     * @param typ      valeur de l'objet
+     * @param desc     description détaillée
+     * @param c        connexion ouverte à la base de données
      * @return ID de l'objet qui vient d'être créer
      */
     @Override
@@ -3427,9 +3431,9 @@ public class UserEJBBean implements UserEJB {
      * *
      * Permet d'annuler des objets
      *
-     * @param o type de l'objet
+     * @param o            type de l'objet
      * @param listeIdObjet liste des ids à annuler
-     * @param c connexion ouverte à la base de données
+     * @param c            connexion ouverte à la base de données
      * @return liste des objets supprimés
      */
     @Override
@@ -3459,9 +3463,9 @@ public class UserEJBBean implements UserEJB {
      * *
      * Permet d'annuler des objets
      *
-     * @param o type de l'objet
+     * @param o            type de l'objet
      * @param listeIdObjet liste des ids à annuler
-     * @param c connexion ouverte à la base de données
+     * @param c            connexion ouverte à la base de données
      * @return liste des objets supprimés
      */
     @Override
@@ -3713,7 +3717,7 @@ public class UserEJBBean implements UserEJB {
 
     @Override
     public void ejbRemove() {
-       
+
     }
 
     /* Changement Compta */
@@ -3764,37 +3768,37 @@ public class UserEJBBean implements UserEJB {
     }
 
     @Override
-    public void validerObjectTous(ClassEtat etat, Connection c)throws Exception{
-        try{
+    public void validerObjectTous(ClassEtat etat, Connection c) throws Exception {
+        try {
             String[] colInt = {"etat"};
-            String[] valInt = {"1","1"};
+            String[] valInt = {"1", "1"};
 
-            ClassEtat[] liste = (ClassEtat[])CGenUtil.rechercher(etat, colInt, valInt, c, "");
+            ClassEtat[] liste = (ClassEtat[]) CGenUtil.rechercher(etat, colInt, valInt, c, "");
 
-            for(int i=0;i<liste.length;i++){
+            for (int i = 0; i < liste.length; i++) {
                 liste[i].validerObject(this.getUser().getTuppleID(), c);
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
     }
 
     @Override
-    public void validerObjectTous(ClassEtat etat)throws Exception{
+    public void validerObjectTous(ClassEtat etat) throws Exception {
         Connection c = null;
-        try{
+        try {
             c = new UtilDB().GetConn();
             c.setAutoCommit(false);
-            validerObjectTous(etat,c);
+            validerObjectTous(etat, c);
             c.commit();
-        }catch(Exception e){
+        } catch (Exception e) {
             if (c != null) {
                 c.rollback();
             }
             throw e;
-        }finally{
+        } finally {
             if (c != null) {
                 c.close();
             }
@@ -3806,18 +3810,16 @@ public class UserEJBBean implements UserEJB {
         if (o instanceof ClassEtat) {
             Connection con = null;
             try {
-                con=new UtilDB().GetConn();
+                con = new UtilDB().GetConn();
                 con.setAutoCommit(false);
-                o = o.getById(o.getTuppleID(),null,con);
+                o = o.getById(o.getTuppleID(), null, con);
                 ((ClassEtat) o).changeState(acte, u.getTuppleID(), con);
                 con.commit();
 //                return o;
-            }
-            catch(AlertException e){
+            } catch (AlertException e) {
                 throw e;
-            }
-             catch (Exception e) {
-                if(con!=null){
+            } catch (Exception e) {
+                if (con != null) {
                     con.rollback();
                 }
                 e.printStackTrace();
@@ -3827,15 +3829,14 @@ public class UserEJBBean implements UserEJB {
                     con.close();
                 }
             }
-        }
-
-        else throw new Exception("L'entité à changer d'état n'est pas un ClassEtat");
+        } else throw new Exception("L'entité à changer d'état n'est pas un ClassEtat");
     }
+
     public ClassMAPTable[] getDataPage(ClassMAPTable e, String requete, Connection c) throws Exception {
-        return (ClassMAPTable[])CGenUtil.rechercher(e, requete, c);
+        return (ClassMAPTable[]) CGenUtil.rechercher(e, requete, c);
     }
 
-    public Object savePlanRemboursement(HttpServletRequest req) throws Exception{
+    public Object savePlanRemboursement(HttpServletRequest req) throws Exception {
         if (u.getRang() < 1) // (testRestriction(u.getIdrole(), "ACT000006", o.getNomTable(), c) == 1)
         {
             throw new Exception("ERREUR DE DROIT");
@@ -3846,11 +3847,11 @@ public class UserEJBBean implements UserEJB {
             c = new UtilDB().GetConn();
             c.setAutoCommit(false);
             String mere = req.getParameter("idMere");
-            Avance[] tabAv = (Avance[])CGenUtil.rechercher(new Avance(), null, null, c, " and id = '"+mere+"'");
-            if(tabAv.length==0)throw new Exception("Erreur avance introuvable : "+mere);
+            Avance[] tabAv = (Avance[]) CGenUtil.rechercher(new Avance(), null, null, c, " and id = '" + mere + "'");
+            if (tabAv.length == 0) throw new Exception("Erreur avance introuvable : " + mere);
             retour = tabAv[0];
             Remboursement[] tab = Remboursement.savePlanRemboursement(req, c);
-            for(int i = 0;i<tab.length;i++){
+            for (int i = 0; i < tab.length; i++) {
                 CreateObject.createObject(tab[i], c, u, this, listeConfig, getListeSource());
             }
             c.commit();
@@ -3858,8 +3859,8 @@ public class UserEJBBean implements UserEJB {
             c.rollback();
             ex.printStackTrace();
             throw ex;
-        }finally{
-            if(c!=null)c.close();
+        } finally {
+            if (c != null) c.close();
         }
         return retour;
 
